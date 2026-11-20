@@ -5,12 +5,17 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  SafeAreaView,
-  Alert
+  SafeAreaView
 } from "react-native";
+
 import { colors } from "../theme/colors";
 
-export default function WelcomeScreen() {
+type Props = {
+  onStart: () => void;
+  onLogin: () => void;
+};
+
+export default function WelcomeScreen({ onStart, onLogin }: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -43,12 +48,7 @@ export default function WelcomeScreen() {
         <View style={styles.actions}>
           <Pressable
             style={styles.primaryButton}
-            onPress={() =>
-              Alert.alert(
-                "Vamos começar!",
-                "A próxima etapa será a apresentação da Zuzu."
-              )
-            }
+            onPress={onStart}
           >
             <Text style={styles.primaryButtonText}>
               Começar minha aventura
@@ -57,12 +57,7 @@ export default function WelcomeScreen() {
 
           <Pressable
             style={styles.secondaryButton}
-            onPress={() =>
-              Alert.alert(
-                "Entrar",
-                "A tela de login será desenvolvida na próxima etapa."
-              )
-            }
+            onPress={onLogin}
           >
             <Text style={styles.secondaryButtonText}>
               Já tenho uma conta — Entrar
