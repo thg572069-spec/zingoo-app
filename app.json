@@ -13,6 +13,13 @@
     },
     "android": {
       "package": "com.zingoo.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "experiments": {
+      "baseUrl": "/zingoo-app"
     }
   }
 }
