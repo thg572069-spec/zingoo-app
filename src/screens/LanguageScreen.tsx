@@ -7,7 +7,8 @@ import {
   StyleSheet,
   Pressable,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Image
 } from "react-native";
 
 import { colors } from "../theme/colors";
@@ -31,6 +32,9 @@ const languages: {
   place: string;
   description: string;
   reaction: string;
+  background: string;
+  accent: string;
+  image: any;
 }[] = [
   {
     name: "Inglês",
@@ -38,7 +42,10 @@ const languages: {
     emoji: "🕰️",
     place: "Londres",
     description: "Explore um mundo de possibilidades!",
-    reaction: "Uau! Vamos explorar Londres e descobrir o inglês juntos!"
+    reaction: "Uau! Vamos explorar Londres e descobrir o inglês juntos!",
+    background: "#D9F1FF",
+    accent: "#168FCB",
+    image: require("../../assets/videos/IMG_0749.jpeg")
   },
   {
     name: "Espanhol",
@@ -46,7 +53,10 @@ const languages: {
     emoji: "🏛️",
     place: "Madri",
     description: "Descubra novas culturas e conversas!",
-    reaction: "¡Qué divertido! Vamos descobrir o espanhol juntos!"
+    reaction: "¡Qué divertido! Vamos descobrir o espanhol juntos!",
+    background: "#DDF7EF",
+    accent: "#42B99B",
+    image: require("../../assets/videos/IMG_0748.jpeg")
   },
   {
     name: "Francês",
@@ -54,7 +64,10 @@ const languages: {
     emoji: "🗼",
     place: "Paris",
     description: "Entre em uma aventura cheia de charme!",
-    reaction: "Magnifique! Nossa aventura pela língua francesa começa agora!"
+    reaction: "Magnifique! Nossa aventura pela língua francesa começa agora!",
+    background: "#E1E9FF",
+    accent: "#526FB5",
+    image: require("../../assets/videos/IMG_0750.jpeg")
   },
   {
     name: "Mandarim",
@@ -62,7 +75,10 @@ const languages: {
     emoji: "🏯",
     place: "Pequim",
     description: "Conheça uma língua fascinante!",
-    reaction: "Que incrível! Vamos explorar os sons e os caracteres do mandarim!"
+    reaction: "Que incrível! Vamos explorar os sons e os caracteres do mandarim!",
+    background: "#E5F8FF",
+    accent: "#269CCB",
+    image: require("../../assets/videos/IMG_0751.jpeg")
   }
 ];
 
@@ -93,6 +109,7 @@ export default function LanguageScreen({
           <View style={styles.progressBackground}>
             <View style={styles.progressFill} />
           </View>
+
           <Text style={styles.progressText}>
             SUA AVENTURA COMEÇA AQUI
           </Text>
@@ -120,7 +137,11 @@ export default function LanguageScreen({
                 onPress={() => setSelected(language.name)}
                 style={[
                   styles.languageCard,
-                  isSelected && styles.selectedCard
+                  { backgroundColor: language.background },
+                  isSelected && {
+                    borderColor: language.accent,
+                    borderWidth: 3
+                  }
                 ]}
               >
                 <View style={styles.cardTop}>
@@ -129,22 +150,35 @@ export default function LanguageScreen({
                   </Text>
 
                   {isSelected && (
-                    <View style={styles.check}>
+                    <View
+                      style={[
+                        styles.check,
+                        { backgroundColor: language.accent }
+                      ]}
+                    >
                       <Text style={styles.checkText}>✓</Text>
                     </View>
                   )}
                 </View>
 
-                <Text style={styles.placeEmoji}>
-                  {language.emoji}
-                </Text>
+                <Image
+                  source={language.image}
+                  style={styles.mascotImage}
+                  resizeMode="contain"
+                  accessibilityLabel={`Zuzu representando o idioma ${language.name}`}
+                />
 
                 <Text style={styles.languageName}>
                   {language.name}
                 </Text>
 
-                <Text style={styles.place}>
-                  {language.place}
+                <Text
+                  style={[
+                    styles.place,
+                    { color: language.accent }
+                  ]}
+                >
+                  {language.emoji} {language.place}
                 </Text>
 
                 <Text style={styles.description}>
@@ -263,18 +297,15 @@ const styles = StyleSheet.create({
   },
   languageCard: {
     width: "47%",
-    minHeight: 178,
-    backgroundColor: colors.snow,
+    minHeight: 235,
     borderWidth: 2,
     borderColor: "transparent",
     borderRadius: 22,
-    padding: 14
-  },
-  selectedCard: {
-    borderColor: colors.ocean,
-    backgroundColor: "#EAF9FF"
+    padding: 12,
+    alignItems: "center"
   },
   cardTop: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center"
@@ -286,7 +317,6 @@ const styles = StyleSheet.create({
     width: 23,
     height: 23,
     borderRadius: 12,
-    backgroundColor: colors.ocean,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -294,27 +324,30 @@ const styles = StyleSheet.create({
     color: colors.snow,
     fontWeight: "900"
   },
-  placeEmoji: {
-    fontSize: 34,
-    marginTop: 9
+  mascotImage: {
+    width: 112,
+    height: 112,
+    marginTop: 5
   },
   languageName: {
     color: colors.polar,
     fontSize: 17,
     fontWeight: "900",
-    marginTop: 5
+    marginTop: 3,
+    textAlign: "center"
   },
   place: {
-    color: colors.ocean,
     fontSize: 12,
     fontWeight: "800",
-    marginTop: 2
+    marginTop: 3,
+    textAlign: "center"
   },
   description: {
     color: colors.muted,
     fontSize: 11,
     lineHeight: 15,
-    marginTop: 6
+    marginTop: 7,
+    textAlign: "center"
   },
   reactionBox: {
     flexDirection: "row",
