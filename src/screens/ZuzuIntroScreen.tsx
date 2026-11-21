@@ -29,7 +29,8 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
 
   const player = useVideoPlayer(ZUZU_INTRO_VIDEO, (videoPlayer) => {
     videoPlayer.loop = false;
-    videoPlayer.muted = true;
+    videoPlayer.muted = false;
+    videoPlayer.volume = 1.0;
   });
 
   useEffect(() => {
@@ -89,7 +90,6 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
         />
       </View>
 
-      {/* Impede que toques acidentais pausem o vídeo. */}
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={() => undefined}
