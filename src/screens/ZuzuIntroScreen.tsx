@@ -16,11 +16,15 @@ type Props = {
   onBack: () => void;
 };
 
+// Nome do arquivo preservado com os caracteres Unicode exatos do GitHub.
 const ZUZU_INTRO_VIDEO = require(
-  "../../assets/videos/PixVerse_V6_Image_Text_720P_Der_uma_animação_n.mov.mp4"
+  "../../assets/videos/PixVerse_V6_Image_Text_720P_Der_uma_animac\u0327a\u0303o_n.mov.mp4"
 );
 
-export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
+export default function ZuzuIntroScreen({
+  onContinue,
+  onBack
+}: Props) {
   const [firstFrameRendered, setFirstFrameRendered] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
@@ -33,15 +37,18 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
   });
 
   useEffect(() => {
-    const subscription = player.addListener("statusChange", ({ status }) => {
-      if (status === "readyToPlay") {
-        player.play();
-      }
+    const subscription = player.addListener(
+      "statusChange",
+      ({ status }) => {
+        if (status === "readyToPlay") {
+          player.play();
+        }
 
-      if (status === "error") {
-        setShowButton(true);
+        if (status === "error") {
+          setShowButton(true);
+        }
       }
-    });
+    );
 
     return () => subscription.remove();
   }, [player]);
@@ -86,7 +93,10 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
         onFirstFrameRender={() => setFirstFrameRendered(true)}
       />
 
-      <SafeAreaView style={styles.overlay} pointerEvents="box-none">
+      <SafeAreaView
+        style={styles.overlay}
+        pointerEvents="box-none"
+      >
         <Pressable
           onPress={onBack}
           style={({ pressed }) => [
@@ -99,7 +109,10 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
           <Text style={styles.backText}>‹ Voltar</Text>
         </Pressable>
 
-        <View style={styles.bottomArea} pointerEvents="box-none">
+        <View
+          style={styles.bottomArea}
+          pointerEvents="box-none"
+        >
           {showButton && (
             <Animated.View
               style={{
@@ -115,7 +128,10 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
                 onPress={onContinue}
                 accessibilityRole="button"
               >
-                <Text style={styles.buttonText}>Vamos nessa!</Text>
+                <Text style={styles.buttonText}>
+                  Vamos nessa!
+                </Text>
+
                 <Text style={styles.buttonArrow}>›</Text>
               </Pressable>
             </Animated.View>
@@ -132,6 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     overflow: "hidden"
   },
+
   overlay: {
     ...StyleSheet.absoluteFillObject,
     flex: 1,
@@ -140,6 +157,7 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     justifyContent: "space-between"
   },
+
   backButton: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.88)",
@@ -147,16 +165,19 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 15
   },
+
   backText: {
     color: colors.polar,
     fontSize: 15,
     fontWeight: "800"
   },
+
   bottomArea: {
     minHeight: 68,
     justifyContent: "flex-end",
     alignItems: "center"
   },
+
   button: {
     minWidth: 220,
     minHeight: 56,
@@ -167,21 +188,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.polar,
-    shadowOffset: { width: 0, height: 5 },
+    shadowOffset: {
+      width: 0,
+      height: 5
+    },
     shadowOpacity: 0.18,
     shadowRadius: 9,
     elevation: 5
   },
+
   buttonPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.98 }]
   },
+
   buttonText: {
     color: colors.snow,
     fontSize: 17,
     fontWeight: "900",
     letterSpacing: 0.2
   },
+
   buttonArrow: {
     color: colors.snow,
     fontSize: 25,
@@ -189,6 +216,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginTop: -2
   },
+
   pressed: {
     opacity: 0.75
   }
