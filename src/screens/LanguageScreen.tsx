@@ -11,7 +11,13 @@ import {
   Image
 } from "react-native";
 
+import { VideoView, useVideoPlayer } from "expo-video";
+
 import { colors } from "../theme/colors";
+
+const ZUZU_HEADER_VIDEO = require(
+  "../../assets/videos/Design sem nome.mp4"
+);
 
 export type Language =
   | "Inglês"
@@ -66,6 +72,15 @@ export default function LanguageScreen({
     initialLanguage
   );
 
+  const headerPlayer = useVideoPlayer(
+    ZUZU_HEADER_VIDEO,
+    (player) => {
+      player.loop = true;
+      player.muted = true;
+      player.play();
+    }
+  );
+
   const selectedInfo = languages.find(
     (language) => language.name === selected
   );
@@ -91,11 +106,11 @@ export default function LanguageScreen({
         </View>
 
         <View style={styles.header}>
-          <Image
-            source={require("../../assets/videos/IMG_0749.jpeg")}
+          <VideoView
+            player={headerPlayer}
             style={styles.headerMascot}
-            resizeMode="contain"
-            accessibilityLabel="Zuzu"
+            contentFit="contain"
+            nativeControls={false}
           />
 
           <View style={styles.headerTextContainer}>
@@ -241,7 +256,8 @@ const styles = StyleSheet.create({
   },
   headerMascot: {
     width: 88,
-    height: 100
+    height: 100,
+    backgroundColor: "transparent"
   },
   headerTextContainer: {
     flex: 1
