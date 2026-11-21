@@ -145,8 +145,6 @@ function WebVideo({
 
       const playback = event.currentTarget.play();
 
-      // O Safari pode exigir um toque do usuário
-      // antes de permitir reprodução com áudio.
       if (playback && playback.catch) {
         playback.catch(() => {});
       }
@@ -447,7 +445,12 @@ export default function App() {
               styles.videoLayer,
               {
                 opacity: currentOpacity,
-                transform: [{ scale: currentScale }]
+                transform: [
+                  {
+                    translateY: stage === "splash" ? 35 : 0
+                  },
+                  { scale: currentScale }
+                ]
               }
             ]}
           >
@@ -455,7 +458,11 @@ export default function App() {
               key={stage}
               stage={stage === "splash" ? "splash" : "welcome"}
               onReady={handleVideoReady}
-              onFinish={handleSplashFinish}
+              onFinish={
+                stage === "splash"
+                  ? handleSplashFinish
+                  : () => {}
+              }
             />
           </Animated.View>
 
