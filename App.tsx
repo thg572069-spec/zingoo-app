@@ -17,6 +17,7 @@ import {
 } from "react-native";
 
 import { VideoView, useVideoPlayer } from "expo-video";
+import { BlurView } from "expo-blur";
 
 import WelcomeScreen from "./src/screens/WelcomeScreen";
 import ZuzuIntroScreen from "./src/screens/ZuzuIntroScreen";
@@ -112,20 +113,16 @@ function ScreenTransition({
   );
 }
 
-// Vídeo para navegador
+// Vídeo de abertura para navegador
 
 function WebVideo({
   source,
   onReady,
-  onFinish,
-  loop,
-  fit
+  onFinish
 }: {
   source: string;
   onReady: () => void;
   onFinish: () => void;
-  loop: boolean;
-  fit: "cover" | "contain";
 }) {
   const [ready, setReady] = useState(false);
 
@@ -133,7 +130,7 @@ function WebVideo({
     src: source,
     autoPlay: true,
     muted: false,
-    loop,
+    loop: false,
     playsInline: true,
     controls: false,
     preload: "auto",
@@ -158,23 +155,13 @@ function WebVideo({
       }
     },
 
-    onPlay: () => {
-      setReady(true);
-      onReady();
-    },
-
-    onEnded: () => {
-      if (!loop) onFinish();
-    },
-
-    onError: () => {
-      if (!loop) onFinish();
-    },
+    onEnded: onFinish,
+    onError: onFinish,
 
     style: {
       width: "100%",
       height: "100%",
-      objectFit: fit,
+      objectFit: "contain",
       backgroundColor: "#0D6ED2",
       display: "block",
       border: 0,
@@ -184,25 +171,109 @@ function WebVideo({
   });
 }
 
+// Boas-vindas com fundo ampliado e desfocado no navegador
+
+function WebWelcomeVideo({
+  source,
+  onReady
+}: {
+  source: string;
+  onReady: () => void;
+}) {
+  const backgroundRef = useRef<any>(null);
+  const foregroundRef = useRef<any>(null);
+  const [backgroundReady, setBackgroundReady] = useState(false);
+  const [foregroundReady, setForegroundReady] = useState(false);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!backgroundReady || !foregroundReady || started.current) return;
+
+    const background = backgroundRef.current;
+    const foreground = foregroundRef.current;
+
+    if (!background || !foreground) return;
+
+    started.current = true;
+    background.currentTime = foreground.currentTime;
+
+    const backgroundPlayback = background.play();
+    const foregroundPlayback = foreground.play();
+
+    if (backgroundPlayback?.catch) {
+      backgroundPlayback.catch(() => {});
+    }
+
+    if (foregroundPlayback?.catch) {
+      foregroundPlayback.catch(() => {});
+    }
+
+    onReady();
+  }, [backgroundReady, foregroundReady, onReady]);
+
+  return (
+    <View style={styles.videoComposition}>
+      <View style={styles.backgroundVideo}>
+        {React.createElement("video" as any, {
+          ref: backgroundRef,
+          src: source,
+          autoPlay: false,
+          muted: true,
+          loop: true,
+          playsInline: true,
+          controls: false,
+          preload: "auto",
+          onCanPlay: () => setBackgroundReady(true),
+          style: {
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "blur(24px)",
+            transform: "scale(1.12)",
+            opacity: backgroundReady ? 1 : 0
+          }
+        })}
+      </View>
+
+      <View style={styles.foregroundVideo}>
+        {React.createElement("video" as any, {
+          ref: foregroundRef,
+          src: source,
+          autoPlay: false,
+          muted: false,
+          loop: true,
+          playsInline: true,
+          controls: false,
+          preload: "auto",
+          onCanPlay: () => setForegroundReady(true),
+          style: {
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            opacity: foregroundReady ? 1 : 0
+          }
+        })}
+      </View>
+    </View>
+  );
+}
+
 // Vídeo nativo para iOS e Android
 
 function NativeVideo({
   source,
   onReady,
-  onFinish,
-  loop,
-  fit
+  onFinish
 }: {
   source: any;
   onReady: () => void;
   onFinish: () => void;
-  loop: boolean;
-  fit: "cover" | "contain";
 }) {
   const [hasFrame, setHasFrame] = useState(false);
 
   const player = useVideoPlayer(source, (videoPlayer) => {
-    videoPlayer.loop = loop;
+    videoPlayer.loop = false;
     videoPlayer.muted = false;
   });
 
@@ -214,7 +285,7 @@ function NativeVideo({
           player.play();
         }
 
-        if (status === "error" && !loop) {
+        if (status === "error") {
           onFinish();
         }
       }
@@ -222,16 +293,14 @@ function NativeVideo({
 
     const endSubscription = player.addListener(
       "playToEnd",
-      () => {
-        if (!loop) onFinish();
-      }
+      onFinish
     );
 
     if (player.status === "readyToPlay") {
       player.play();
     }
 
-    if (player.status === "error" && !loop) {
+    if (player.status === "error") {
       onFinish();
     }
 
@@ -239,7 +308,7 @@ function NativeVideo({
       statusSubscription.remove();
       endSubscription.remove();
     };
-  }, [player, onFinish, loop]);
+  }, [player, onFinish]);
 
   return (
     <VideoView
@@ -248,7 +317,7 @@ function NativeVideo({
         { opacity: hasFrame ? 1 : 0 }
       ]}
       player={player}
-      contentFit={fit}
+      contentFit="contain"
       nativeControls={false}
       allowsPictureInPicture={false}
       onFirstFrameRender={() => {
@@ -256,6 +325,121 @@ function NativeVideo({
         onReady();
       }}
     />
+  );
+}
+
+// Boas-vindas com dois vídeos sincronizados no iOS e Android
+
+function NativeWelcomeVideo({
+  source,
+  onReady
+}: {
+  source: any;
+  onReady: () => void;
+}) {
+  const [backgroundReady, setBackgroundReady] = useState(false);
+  const [foregroundReady, setForegroundReady] = useState(false);
+  const [hasFrame, setHasFrame] = useState(false);
+
+  const started = useRef(false);
+  const readyCallback = useRef(false);
+
+  const backgroundPlayer = useVideoPlayer(source, (player) => {
+    player.loop = true;
+    player.muted = true;
+  });
+
+  const foregroundPlayer = useVideoPlayer(source, (player) => {
+    player.loop = true;
+    player.muted = false;
+  });
+
+  useEffect(() => {
+    const backgroundSubscription = backgroundPlayer.addListener(
+      "statusChange",
+      ({ status }) => {
+        if (status === "readyToPlay") {
+          setBackgroundReady(true);
+        }
+      }
+    );
+
+    const foregroundSubscription = foregroundPlayer.addListener(
+      "statusChange",
+      ({ status }) => {
+        if (status === "readyToPlay") {
+          setForegroundReady(true);
+        }
+      }
+    );
+
+    if (backgroundPlayer.status === "readyToPlay") {
+      setBackgroundReady(true);
+    }
+
+    if (foregroundPlayer.status === "readyToPlay") {
+      setForegroundReady(true);
+    }
+
+    return () => {
+      backgroundSubscription.remove();
+      foregroundSubscription.remove();
+    };
+  }, [backgroundPlayer, foregroundPlayer]);
+
+  useEffect(() => {
+    if (!backgroundReady || !foregroundReady || started.current) return;
+
+    started.current = true;
+
+    backgroundPlayer.currentTime = foregroundPlayer.currentTime;
+
+    backgroundPlayer.play();
+    foregroundPlayer.play();
+  }, [
+    backgroundReady,
+    foregroundReady,
+    backgroundPlayer,
+    foregroundPlayer
+  ]);
+
+  const handleFirstFrame = useCallback(() => {
+    setHasFrame(true);
+
+    if (!readyCallback.current) {
+      readyCallback.current = true;
+      onReady();
+    }
+  }, [onReady]);
+
+  return (
+    <View style={styles.videoComposition}>
+      <VideoView
+        style={styles.backgroundVideo}
+        player={backgroundPlayer}
+        contentFit="cover"
+        nativeControls={false}
+        allowsPictureInPicture={false}
+      />
+
+      <BlurView
+        intensity={35}
+        tint="dark"
+        style={styles.blurLayer}
+      />
+
+      <VideoView
+        style={[
+          styles.foregroundVideo,
+          { opacity: hasFrame ? 1 : 0 }
+        ]}
+        player={foregroundPlayer}
+        contentFit="contain"
+        nativeControls={false}
+        allowsPictureInPicture={false}
+        onFirstFrameRender={handleFirstFrame}
+      />
+    </View>
   );
 }
 
@@ -272,38 +456,39 @@ function OpeningVideo({
 }) {
   const isWelcome = stage === "welcome";
 
-  const nativeSource = isWelcome
-    ? WELCOME_VIDEO
-    : SPLASH_VIDEO;
+  if (isWelcome) {
+    if (Platform.OS === "web") {
+      return (
+        <WebWelcomeVideo
+          source={WELCOME_VIDEO_URL}
+          onReady={onReady}
+        />
+      );
+    }
 
-  const webSource = isWelcome
-    ? WELCOME_VIDEO_URL
-    : SPLASH_VIDEO_URL;
-
-  const loop = isWelcome;
-
-  // Boas-vindas preenche toda a tela; splash preserva a composição.
-  const fit = isWelcome ? "cover" : "contain";
+    return (
+      <NativeWelcomeVideo
+        source={WELCOME_VIDEO}
+        onReady={onReady}
+      />
+    );
+  }
 
   if (Platform.OS === "web") {
     return (
       <WebVideo
-        source={webSource}
+        source={SPLASH_VIDEO_URL}
         onReady={onReady}
         onFinish={onFinish}
-        loop={loop}
-        fit={fit}
       />
     );
   }
 
   return (
     <NativeVideo
-      source={nativeSource}
+      source={SPLASH_VIDEO}
       onReady={onReady}
       onFinish={onFinish}
-      loop={loop}
-      fit={fit}
     />
   );
 }
@@ -530,6 +715,26 @@ const styles = StyleSheet.create({
   video: {
     width: "100%",
     height: "100%"
+  },
+
+  videoComposition: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: "hidden",
+    backgroundColor: "#0D6ED2",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+
+  backgroundVideo: {
+    ...StyleSheet.absoluteFillObject
+  },
+
+  blurLayer: {
+    ...StyleSheet.absoluteFillObject
+  },
+
+  foregroundVideo: {
+    ...StyleSheet.absoluteFillObject
   },
 
   welcomeButtons: {
