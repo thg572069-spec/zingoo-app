@@ -1,13 +1,14 @@
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  Animated,
   Pressable,
-  SafeAreaView
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
-
+import { VideoView, useVideoPlayer } from "expo-video";
 import { colors } from "../theme/colors";
 
 type Props = {
@@ -15,163 +16,180 @@ type Props = {
   onBack: () => void;
 };
 
+const ZUZU_INTRO_VIDEO = require(
+  "../../assets/videos/PixVerse_V6_Image_Text_720P_Der_uma_animação_n.mov.mp4"
+);
+
 export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
+  const [firstFrameRendered, setFirstFrameRendered] = useState(false);
+  const [showButton, setShowButton] = useState(false);
+
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const buttonScale = useRef(new Animated.Value(0.94)).current;
+
+  const player = useVideoPlayer(ZUZU_INTRO_VIDEO, (videoPlayer) => {
+    videoPlayer.loop = false;
+    videoPlayer.muted = true;
+  });
+
+  useEffect(() => {
+    const subscription = player.addListener("statusChange", ({ status }) => {
+      if (status === "readyToPlay") {
+        player.play();
+      }
+
+      if (status === "error") {
+        setShowButton(true);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [player]);
+
+  useEffect(() => {
+    if (!firstFrameRendered) return;
+
+    const timeout = setTimeout(() => {
+      player.pause();
+      setShowButton(true);
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  }, [firstFrameRendered, player]);
+
+  useEffect(() => {
+    if (!showButton) return;
+
+    Animated.parallel([
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true
+      }),
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        speed: 16,
+        bounciness: 5,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [showButton, buttonOpacity, buttonScale]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Pressable onPress={onBack} style={styles.backButton}>
+    <View style={styles.container}>
+      <VideoView
+        style={StyleSheet.absoluteFill}
+        player={player}
+        contentFit="contain"
+        nativeControls={false}
+        allowsPictureInPicture={false}
+        onFirstFrameRender={() => setFirstFrameRendered(true)}
+      />
+
+      <SafeAreaView style={styles.overlay} pointerEvents="box-none">
+        <Pressable
+          onPress={onBack}
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed && styles.pressed
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar para a tela de boas-vindas"
+        >
           <Text style={styles.backText}>‹ Voltar</Text>
         </Pressable>
 
-        <View style={styles.content}>
-          <Text style={styles.eyebrow}>SUA NOVA COMPANHEIRA</Text>
-
-          <View style={styles.mascotArea}>
-            <Text style={styles.snowflake}>❄</Text>
-            <Text style={styles.mascot}>🦭</Text>
-            <Text style={styles.sparkle}>✦</Text>
-          </View>
-
-          <Text style={styles.title}>
-            Oii! Eu sou a Zuzu!
-          </Text>
-
-          <Text style={styles.message}>
-            Seja muito bem-vindo à ZINGOO!
-          </Text>
-
-          <Text style={styles.description}>
-            Aqui, você vai explorar um mundo cheio de descobertas,
-            aventuras e diversão enquanto aprende novos idiomas.
-            {"\n\n"}
-            Eu vou acompanhar você, ajudar nas atividades e comemorar
-            cada conquista!
-          </Text>
-
-          <View style={styles.speechBubble}>
-            <Text style={styles.speechText}>
-              Está preparado para começar essa aventura comigo?
-            </Text>
-          </View>
+        <View style={styles.bottomArea} pointerEvents="box-none">
+          {showButton && (
+            <Animated.View
+              style={{
+                opacity: buttonOpacity,
+                transform: [{ scale: buttonScale }]
+              }}
+            >
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={onContinue}
+                accessibilityRole="button"
+              >
+                <Text style={styles.buttonText}>Vamos nessa!</Text>
+                <Text style={styles.buttonArrow}>›</Text>
+              </Pressable>
+            </Animated.View>
+          )}
         </View>
-
-        <Pressable
-          style={styles.button}
-          onPress={onContinue}
-        >
-          <Text style={styles.buttonText}>
-            Vamos nessa!
-          </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background
-  },
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 18,
-    paddingBottom: 24
+    backgroundColor: colors.background,
+    overflow: "hidden"
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 18,
+    justifyContent: "space-between"
   },
   backButton: {
     alignSelf: "flex-start",
-    paddingVertical: 10,
-    paddingHorizontal: 4
+    backgroundColor: "rgba(255,255,255,0.88)",
+    borderRadius: 20,
+    paddingVertical: 9,
+    paddingHorizontal: 15
   },
   backText: {
     color: colors.polar,
-    fontSize: 16,
-    fontWeight: "700"
+    fontSize: 15,
+    fontWeight: "800"
   },
-  content: {
-    flex: 1,
-    justifyContent: "center",
+  bottomArea: {
+    minHeight: 68,
+    justifyContent: "flex-end",
     alignItems: "center"
-  },
-  eyebrow: {
-    color: colors.ocean,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 2
-  },
-  mascotArea: {
-    width: 230,
-    height: 210,
-    borderRadius: 34,
-    backgroundColor: colors.ice,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 28,
-    marginBottom: 28
-  },
-  mascot: {
-    fontSize: 112
-  },
-  snowflake: {
-    position: "absolute",
-    top: 20,
-    left: 24,
-    fontSize: 30,
-    color: colors.snow
-  },
-  sparkle: {
-    position: "absolute",
-    right: 25,
-    bottom: 24,
-    fontSize: 35,
-    color: colors.sun
-  },
-  title: {
-    color: colors.polar,
-    fontSize: 29,
-    fontWeight: "900",
-    textAlign: "center"
-  },
-  message: {
-    color: colors.ocean,
-    fontSize: 17,
-    fontWeight: "800",
-    marginTop: 12,
-    textAlign: "center"
-  },
-  description: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 24,
-    textAlign: "center",
-    marginTop: 18
-  },
-  speechBubble: {
-    backgroundColor: colors.snow,
-    borderRadius: 20,
-    padding: 18,
-    marginTop: 22,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: colors.ice
-  },
-  speechText: {
-    color: colors.polar,
-    fontSize: 15,
-    fontWeight: "700",
-    textAlign: "center",
-    lineHeight: 22
   },
   button: {
+    minWidth: 220,
+    minHeight: 56,
+    borderRadius: 19,
+    paddingHorizontal: 24,
     backgroundColor: colors.ocean,
-    paddingVertical: 18,
-    borderRadius: 18,
-    alignItems: "center"
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.polar,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.18,
+    shadowRadius: 9,
+    elevation: 5
+  },
+  buttonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }]
   },
   buttonText: {
     color: colors.snow,
-    fontSize: 16,
-    fontWeight: "800"
+    fontSize: 17,
+    fontWeight: "900",
+    letterSpacing: 0.2
+  },
+  buttonArrow: {
+    color: colors.snow,
+    fontSize: 25,
+    fontWeight: "700",
+    marginLeft: 10,
+    marginTop: -2
+  },
+  pressed: {
+    opacity: 0.75
   }
 });
