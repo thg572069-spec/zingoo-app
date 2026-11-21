@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   View,
@@ -77,9 +77,18 @@ export default function LanguageScreen({
     (player) => {
       player.loop = true;
       player.muted = true;
-      player.play();
     }
   );
+
+  useEffect(() => {
+    headerPlayer.muted = true;
+    headerPlayer.loop = true;
+    headerPlayer.play();
+
+    return () => {
+      headerPlayer.pause();
+    };
+  }, [headerPlayer]);
 
   const selectedInfo = languages.find(
     (language) => language.name === selected
