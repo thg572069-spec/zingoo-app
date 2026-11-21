@@ -34,7 +34,7 @@ const VIDEO_SOURCE = require(
 const WEB_VIDEO_URL =
   "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4";
 
-// Transição reutilizável entre as telas
+// Transição expansiva das telas
 
 function ScreenTransition({
   children
@@ -42,7 +42,7 @@ function ScreenTransition({
   children: React.ReactNode;
 }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(18)).current;
+  const scale = useRef(new Animated.Value(0.96)).current;
 
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
@@ -62,23 +62,23 @@ function ScreenTransition({
 
     if (reduceMotion) {
       opacity.setValue(1);
-      translateX.setValue(0);
+      scale.setValue(1);
       return;
     }
 
     opacity.setValue(0);
-    translateX.setValue(18);
+    scale.setValue(0.96);
 
     const animation = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 320,
+        duration: 350,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false
       }),
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 320,
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 400,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false
       })
@@ -87,7 +87,7 @@ function ScreenTransition({
     animation.start();
 
     return () => animation.stop();
-  }, [reduceMotion, opacity, translateX]);
+  }, [reduceMotion, opacity, scale]);
 
   return (
     <Animated.View
@@ -95,7 +95,7 @@ function ScreenTransition({
         styles.transition,
         {
           opacity,
-          transform: [{ translateX }]
+          transform: [{ scale }]
         }
       ]}
     >
@@ -107,8 +107,10 @@ function ScreenTransition({
 // Vídeo de abertura para navegador
 
 function WebOpeningVideo({
+  onReady,
   onFinish
 }: {
+  onReady: () => void;
   onFinish: () => void;
 }) {
   const [ready, setReady] = useState(false);
@@ -124,6 +126,7 @@ function WebOpeningVideo({
 
     onCanPlay: (event: any) => {
       setReady(true);
+      onReady();
 
       const playback = event.currentTarget.play();
 
@@ -132,7 +135,11 @@ function WebOpeningVideo({
       }
     },
 
-    onPlay: () => setReady(true),
+    onPlay: () => {
+      setReady(true);
+      onReady();
+    },
+
     onEnded: onFinish,
     onError: onFinish,
 
@@ -150,8 +157,10 @@ function WebOpeningVideo({
 // Vídeo de abertura para iOS e Android
 
 function NativeOpeningVideo({
+  onReady,
   onFinish
 }: {
+  onReady: () => void;
   onFinish: () => void;
 }) {
   const [hasFrame, setHasFrame] = useState(false);
@@ -204,12 +213,13 @@ function NativeOpeningVideo({
       contentFit="contain"
       nativeControls={false}
       allowsPictureInPicture={false}
-      onFirstFrameRender={() => setHasFrame(true)}
+      onFirstFrameRender={() => {
+        setHasFrame(true);
+        onReady();
+      }}
     />
   );
 }
-
-// Aplicativo
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("welcome");
@@ -219,9 +229,75 @@ export default function App() {
 
   const [showOpening, setShowOpening] = useState(true);
 
+  const openingFinished = useRef(false);
+  const videoStarted = useRef(false);
+
+  const openingOpacity = useRef(new Animated.Value(0)).current;
+  const openingScale = useRef(new Animated.Value(0.96)).current;
+
+  const welcomeOpacity = useRef(new Animated.Value(0)).current;
+  const welcomeScale = useRef(new Animated.Value(0.96)).current;
+
+  const handleVideoReady = useCallback(() => {
+    if (videoStarted.current) return;
+
+    videoStarted.current = true;
+
+    Animated.parallel([
+      Animated.timing(openingOpacity, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      }),
+      Animated.timing(openingScale, {
+        toValue: 1,
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      })
+    ]).start();
+  }, [openingOpacity, openingScale]);
+
   const finishOpening = useCallback(() => {
-    setShowOpening(false);
-  }, []);
+    if (openingFinished.current) return;
+
+    openingFinished.current = true;
+
+    Animated.parallel([
+      Animated.timing(openingOpacity, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false
+      }),
+      Animated.timing(openingScale, {
+        toValue: 1.22,
+        duration: 550,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false
+      }),
+      Animated.timing(welcomeOpacity, {
+        toValue: 1,
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      }),
+      Animated.timing(welcomeScale, {
+        toValue: 1,
+        duration: 550,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      })
+    ]).start(() => {
+      setShowOpening(false);
+    });
+  }, [
+    openingOpacity,
+    openingScale,
+    welcomeOpacity,
+    welcomeScale
+  ]);
 
   function handleLanguageContinue(language: Language) {
     setSelectedLanguage(language);
@@ -234,44 +310,79 @@ export default function App() {
         backgroundColor="#0D6ED2"
       />
 
-      {showOpening ? (
-        <View style={styles.opening}>
-          {Platform.OS === "web" ? (
-            <WebOpeningVideo onFinish={finishOpening} />
-          ) : (
-            <NativeOpeningVideo onFinish={finishOpening} />
-          )}
+      {!showOpening && (
+        <View style={styles.screenContainer}>
+          <ScreenTransition key={screen}>
+            {screen === "welcome" && (
+              <WelcomeScreen
+                onStart={() => setScreen("zuzu")}
+                onLogin={() => setScreen("login")}
+              />
+            )}
+
+            {screen === "zuzu" && (
+              <ZuzuIntroScreen
+                onContinue={() => setScreen("language")}
+                onBack={() => setScreen("welcome")}
+              />
+            )}
+
+            {screen === "login" && (
+              <LoginScreen
+                onBack={() => setScreen("welcome")}
+              />
+            )}
+
+            {screen === "language" && (
+              <LanguageScreen
+                initialLanguage={selectedLanguage}
+                onContinue={handleLanguageContinue}
+                onBack={() => setScreen("zuzu")}
+              />
+            )}
+          </ScreenTransition>
         </View>
-      ) : (
-        <ScreenTransition key={screen}>
-          {screen === "welcome" && (
+      )}
+
+      {showOpening && (
+        <View style={styles.opening}>
+          <Animated.View
+            style={[
+              styles.welcomeReveal,
+              {
+                opacity: welcomeOpacity,
+                transform: [{ scale: welcomeScale }]
+              }
+            ]}
+          >
             <WelcomeScreen
               onStart={() => setScreen("zuzu")}
               onLogin={() => setScreen("login")}
             />
-          )}
+          </Animated.View>
 
-          {screen === "zuzu" && (
-            <ZuzuIntroScreen
-              onContinue={() => setScreen("language")}
-              onBack={() => setScreen("welcome")}
-            />
-          )}
-
-          {screen === "login" && (
-            <LoginScreen
-              onBack={() => setScreen("welcome")}
-            />
-          )}
-
-          {screen === "language" && (
-            <LanguageScreen
-              initialLanguage={selectedLanguage}
-              onContinue={handleLanguageContinue}
-              onBack={() => setScreen("zuzu")}
-            />
-          )}
-        </ScreenTransition>
+          <Animated.View
+            style={[
+              styles.videoLayer,
+              {
+                opacity: openingOpacity,
+                transform: [{ scale: openingScale }]
+              }
+            ]}
+          >
+            {Platform.OS === "web" ? (
+              <WebOpeningVideo
+                onReady={handleVideoReady}
+                onFinish={finishOpening}
+              />
+            ) : (
+              <NativeOpeningVideo
+                onReady={handleVideoReady}
+                onFinish={finishOpening}
+              />
+            )}
+          </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -290,9 +401,24 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
 
+  welcomeReveal: {
+    ...StyleSheet.absoluteFillObject
+  },
+
+  videoLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0D6ED2"
+  },
+
   video: {
     width: "100%",
     height: "100%"
+  },
+
+  screenContainer: {
+    flex: 1
   },
 
   transition: {
