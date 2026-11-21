@@ -1,11 +1,21 @@
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
+
 import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
   Platform,
   StatusBar,
   StyleSheet,
   View
 } from "react-native";
+
 import { VideoView, useVideoPlayer } from "expo-video";
 
 import WelcomeScreen from "./src/screens/WelcomeScreen";
@@ -24,11 +34,83 @@ const VIDEO_SOURCE = require(
 const WEB_VIDEO_URL =
   "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4";
 
-type OpeningVideoProps = {
-  onFinish: () => void;
-};
+// Transição reutilizável entre as telas
 
-function WebOpeningVideo({ onFinish }: OpeningVideoProps) {
+function ScreenTransition({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(18)).current;
+
+  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion === null) return;
+
+    if (reduceMotion) {
+      opacity.setValue(1);
+      translateX.setValue(0);
+      return;
+    }
+
+    opacity.setValue(0);
+    translateX.setValue(18);
+
+    const animation = Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      }),
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      })
+    ]);
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [reduceMotion, opacity, translateX]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.transition,
+        {
+          opacity,
+          transform: [{ translateX }]
+        }
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+// Vídeo de abertura para navegador
+
+function WebOpeningVideo({
+  onFinish
+}: {
+  onFinish: () => void;
+}) {
   const [ready, setReady] = useState(false);
 
   return React.createElement("video" as any, {
@@ -39,6 +121,7 @@ function WebOpeningVideo({ onFinish }: OpeningVideoProps) {
     controls: false,
     preload: "auto",
     disablePictureInPicture: true,
+
     onCanPlay: (event: any) => {
       setReady(true);
 
@@ -48,9 +131,11 @@ function WebOpeningVideo({ onFinish }: OpeningVideoProps) {
         playback.catch(() => onFinish());
       }
     },
+
     onPlay: () => setReady(true),
     onEnded: onFinish,
     onError: onFinish,
+
     style: {
       width: "100%",
       height: "100%",
@@ -62,7 +147,13 @@ function WebOpeningVideo({ onFinish }: OpeningVideoProps) {
   });
 }
 
-function NativeOpeningVideo({ onFinish }: OpeningVideoProps) {
+// Vídeo de abertura para iOS e Android
+
+function NativeOpeningVideo({
+  onFinish
+}: {
+  onFinish: () => void;
+}) {
   const [hasFrame, setHasFrame] = useState(false);
 
   const player = useVideoPlayer(VIDEO_SOURCE, (videoPlayer) => {
@@ -118,6 +209,8 @@ function NativeOpeningVideo({ onFinish }: OpeningVideoProps) {
   );
 }
 
+// Aplicativo
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("welcome");
 
@@ -150,7 +243,7 @@ export default function App() {
           )}
         </View>
       ) : (
-        <>
+        <ScreenTransition key={screen}>
           {screen === "welcome" && (
             <WelcomeScreen
               onStart={() => setScreen("zuzu")}
@@ -178,7 +271,7 @@ export default function App() {
               onBack={() => setScreen("zuzu")}
             />
           )}
-        </>
+        </ScreenTransition>
       )}
     </View>
   );
@@ -189,14 +282,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0D6ED2"
   },
+
   opening: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#0D6ED2",
     alignItems: "center",
     justifyContent: "center"
   },
+
   video: {
     width: "100%",
     height: "100%"
+  },
+
+  transition: {
+    flex: 1
   }
 });
