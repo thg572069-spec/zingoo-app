@@ -281,7 +281,7 @@ function OpeningVideo({
     : SPLASH_VIDEO_URL;
 
   const loop = isWelcome;
-  const fit = isWelcome ? "cover" : "contain";
+  const fit = isWelcome ? "contain" : "contain";
 
   if (Platform.OS === "web") {
     return (
@@ -431,7 +431,7 @@ export default function App() {
   const currentScale =
     stage === "splash" ? splashScale : welcomeScale;
 
-  const splashVisualScale = Animated.multiply(
+  const welcomeVisualScale = Animated.multiply(
     currentScale,
     0.88
   );
@@ -452,11 +452,11 @@ export default function App() {
                 opacity: currentOpacity,
                 transform: [
                   {
-                    translateY: stage === "splash" ? 90 : 0
+                    translateY: stage === "welcome" ? 90 : 0
                   },
                   {
-                    scale: stage === "splash"
-                      ? splashVisualScale
+                    scale: stage === "welcome"
+                      ? welcomeVisualScale
                       : currentScale
                   }
                 ]
