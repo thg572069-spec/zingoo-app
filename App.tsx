@@ -281,7 +281,9 @@ function OpeningVideo({
     : SPLASH_VIDEO_URL;
 
   const loop = isWelcome;
-  const fit = isWelcome ? "contain" : "contain";
+
+  // Boas-vindas preenche toda a tela; splash preserva a composição.
+  const fit = isWelcome ? "cover" : "contain";
 
   if (Platform.OS === "web") {
     return (
