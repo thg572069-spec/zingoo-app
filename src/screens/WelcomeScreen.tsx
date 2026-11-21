@@ -1,53 +1,32 @@
 
 import React from "react";
+
 import {
+  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  Pressable,
-  SafeAreaView
+  Pressable
 } from "react-native";
-
-import { colors } from "../theme/colors";
 
 type Props = {
   onStart: () => void;
   onLogin: () => void;
 };
 
-export default function WelcomeScreen({ onStart, onLogin }: Props) {
+export default function WelcomeScreen({
+  onStart,
+  onLogin
+}: Props) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>
-          SEU MUNDO DE IDIOMAS
-        </Text>
-
-        <Text style={styles.logo}>ZINGOO</Text>
-
-        <Text style={styles.tagline}>
-          Aprender nunca foi tão divertido!
-        </Text>
-
-        <View style={styles.landscape}>
-          <Text style={styles.snowflake}>❄</Text>
-          <Text style={styles.aurora}>✦</Text>
-
-          <View style={styles.mascots}>
-            <Text style={styles.mascot}>🦭</Text>
-            <Text style={styles.mascot}>🐧</Text>
-            <Text style={styles.mascot}>🦉</Text>
-            <Text style={styles.mascot}>🦊</Text>
-          </View>
-
-          <Text style={styles.landscapeText}>
-            Uma aventura cheia de descobertas espera por você!
-          </Text>
-        </View>
-
         <View style={styles.actions}>
           <Pressable
-            style={styles.primaryButton}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.pressed
+            ]}
             onPress={onStart}
           >
             <Text style={styles.primaryButtonText}>
@@ -56,7 +35,10 @@ export default function WelcomeScreen({ onStart, onLogin }: Props) {
           </Pressable>
 
           <Pressable
-            style={styles.secondaryButton}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.pressed
+            ]}
             onPress={onLogin}
           >
             <Text style={styles.secondaryButtonText}>
@@ -64,10 +46,6 @@ export default function WelcomeScreen({ onStart, onLogin }: Props) {
             </Text>
           </Pressable>
         </View>
-
-        <Text style={styles.footer}>
-          ZINGOO • Aprenda explorando
-        </Text>
       </View>
     </SafeAreaView>
   );
@@ -76,112 +54,57 @@ export default function WelcomeScreen({ onStart, onLogin }: Props) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: "transparent"
   },
+
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     paddingHorizontal: 24,
-    paddingTop: 30,
-    paddingBottom: 18
+    paddingBottom: 22
   },
-  eyebrow: {
-    color: colors.ocean,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 3
-  },
-  logo: {
-    color: colors.polar,
-    fontSize: 44,
-    fontWeight: "900",
-    letterSpacing: 5
-  },
-  tagline: {
-    color: colors.text,
-    fontSize: 19,
-    fontWeight: "700",
-    textAlign: "center"
-  },
-  landscape: {
-    width: "100%",
-    flex: 1,
-    maxHeight: 340,
-    minHeight: 220,
-    borderRadius: 30,
-    backgroundColor: colors.ice,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-    marginVertical: 20,
-    overflow: "hidden"
-  },
-  snowflake: {
-    position: "absolute",
-    top: 22,
-    left: 28,
-    fontSize: 30,
-    color: colors.snow
-  },
-  aurora: {
-    position: "absolute",
-    top: 35,
-    right: 35,
-    fontSize: 35,
-    color: colors.aurora
-  },
-  mascots: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    gap: 12
-  },
-  mascot: {
-    fontSize: 55
-  },
-  landscapeText: {
-    color: colors.polar,
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 28,
-    lineHeight: 21
-  },
+
   actions: {
     width: "100%",
     gap: 12
   },
+
   primaryButton: {
-    backgroundColor: colors.ocean,
+    backgroundColor: "#FFD166",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 22,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF"
+  },
+
+  primaryButtonText: {
+    color: "#254B82",
+    fontSize: 16,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+
+  secondaryButton: {
+    backgroundColor: "rgba(13, 110, 210, 0.88)",
     paddingVertical: 17,
     paddingHorizontal: 20,
-    borderRadius: 18,
-    alignItems: "center"
-  },
-  primaryButtonText: {
-    color: colors.snow,
-    fontSize: 16,
-    fontWeight: "800"
-  },
-  secondaryButton: {
-    backgroundColor: colors.snow,
+    borderRadius: 22,
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: colors.ocean,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 18,
-    alignItems: "center"
+    borderColor: "#FFFFFF"
   },
+
   secondaryButtonText: {
-    color: colors.polar,
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "700"
+    fontWeight: "800",
+    textAlign: "center"
   },
-  footer: {
-    color: colors.muted,
-    fontSize: 11,
-    marginTop: 18
+
+  pressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.98 }]
   }
 });
