@@ -27,57 +27,32 @@ type Props = {
 
 const languages: {
   name: Language;
-  flag: string;
-  emoji: string;
-  place: string;
   description: string;
   reaction: string;
-  background: string;
-  accent: string;
   image: any;
 }[] = [
   {
     name: "Inglês",
-    flag: "🇬🇧",
-    emoji: "🕰️",
-    place: "Londres",
     description: "Explore um mundo de possibilidades!",
-    reaction: "Uau! Vamos explorar Londres e descobrir o inglês juntos!",
-    background: "#D9F1FF",
-    accent: "#168FCB",
+    reaction: "Uau! Vamos descobrir o inglês juntos!",
     image: require("../../assets/videos/IMG_0749.jpeg")
   },
   {
     name: "Espanhol",
-    flag: "🇪🇸",
-    emoji: "🏛️",
-    place: "Madri",
     description: "Descubra novas culturas e conversas!",
     reaction: "¡Qué divertido! Vamos descobrir o espanhol juntos!",
-    background: "#DDF7EF",
-    accent: "#42B99B",
     image: require("../../assets/videos/IMG_0748.jpeg")
   },
   {
     name: "Francês",
-    flag: "🇫🇷",
-    emoji: "🗼",
-    place: "Paris",
     description: "Entre em uma aventura cheia de charme!",
     reaction: "Magnifique! Nossa aventura pela língua francesa começa agora!",
-    background: "#E1E9FF",
-    accent: "#526FB5",
     image: require("../../assets/videos/IMG_0750.jpeg")
   },
   {
     name: "Mandarim",
-    flag: "🇨🇳",
-    emoji: "🏯",
-    place: "Pequim",
     description: "Conheça uma língua fascinante!",
-    reaction: "Que incrível! Vamos explorar os sons e os caracteres do mandarim!",
-    background: "#E5F8FF",
-    accent: "#269CCB",
+    reaction: "Que incrível! Vamos explorar os sons e caracteres do mandarim!",
     image: require("../../assets/videos/IMG_0751.jpeg")
   }
 ];
@@ -116,15 +91,22 @@ export default function LanguageScreen({
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.mascot}>🦭</Text>
+          <Image
+            source={require("../../assets/videos/IMG_0749.jpeg")}
+            style={styles.headerMascot}
+            resizeMode="contain"
+            accessibilityLabel="Zuzu"
+          />
 
-          <Text style={styles.title}>
-            Qual idioma você quer aprender?
-          </Text>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>
+              Qual idioma você quer aprender?
+            </Text>
 
-          <Text style={styles.subtitle}>
-            Escolha seu primeiro destino. Eu vou acompanhar você nessa jornada!
-          </Text>
+            <Text style={styles.subtitle}>
+              Escolha seu primeiro idioma. Vou acompanhar você nessa jornada!
+            </Text>
+          </View>
         </View>
 
         <View style={styles.grid}>
@@ -137,25 +119,12 @@ export default function LanguageScreen({
                 onPress={() => setSelected(language.name)}
                 style={[
                   styles.languageCard,
-                  { backgroundColor: language.background },
-                  isSelected && {
-                    borderColor: language.accent,
-                    borderWidth: 3
-                  }
+                  isSelected && styles.selectedCard
                 ]}
               >
-                <View style={styles.cardTop}>
-                  <Text style={styles.flag}>
-                    {language.flag}
-                  </Text>
-
+                <View style={styles.checkContainer}>
                   {isSelected && (
-                    <View
-                      style={[
-                        styles.check,
-                        { backgroundColor: language.accent }
-                      ]}
-                    >
+                    <View style={styles.check}>
                       <Text style={styles.checkText}>✓</Text>
                     </View>
                   )}
@@ -165,20 +134,11 @@ export default function LanguageScreen({
                   source={language.image}
                   style={styles.mascotImage}
                   resizeMode="contain"
-                  accessibilityLabel={`Zuzu representando o idioma ${language.name}`}
+                  accessibilityLabel={`Zuzu para ${language.name}`}
                 />
 
                 <Text style={styles.languageName}>
                   {language.name}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.place,
-                    { color: language.accent }
-                  ]}
-                >
-                  {language.emoji} {language.place}
                 </Text>
 
                 <Text style={styles.description}>
@@ -190,7 +150,12 @@ export default function LanguageScreen({
         </View>
 
         <View style={styles.reactionBox}>
-          <Text style={styles.reactionMascot}>🦭</Text>
+          <Image
+            source={selectedInfo?.image ?? languages[0].image}
+            style={styles.reactionMascot}
+            resizeMode="contain"
+            accessibilityLabel="Zuzu"
+          />
 
           <View style={styles.reactionContent}>
             <Text style={styles.reactionTitle}>
@@ -268,26 +233,30 @@ const styles = StyleSheet.create({
     marginTop: 9
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 25
+    marginTop: 25,
+    marginBottom: 25,
+    gap: 12
   },
-  mascot: {
-    fontSize: 66,
-    marginBottom: 12
+  headerMascot: {
+    width: 88,
+    height: 100
+  },
+  headerTextContainer: {
+    flex: 1
   },
   title: {
     color: colors.polar,
-    fontSize: 25,
+    fontSize: 23,
     fontWeight: "900",
-    textAlign: "center"
+    lineHeight: 29
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: "center",
-    marginTop: 10
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 7
   },
   grid: {
     flexDirection: "row",
@@ -297,26 +266,28 @@ const styles = StyleSheet.create({
   },
   languageCard: {
     width: "47%",
-    minHeight: 235,
+    minHeight: 218,
+    backgroundColor: colors.snow,
     borderWidth: 2,
-    borderColor: "transparent",
+    borderColor: colors.ice,
     borderRadius: 22,
     padding: 12,
     alignItems: "center"
   },
-  cardTop: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
+  selectedCard: {
+    borderColor: colors.ocean,
+    backgroundColor: "#F2FBFF"
   },
-  flag: {
-    fontSize: 25
+  checkContainer: {
+    width: "100%",
+    height: 23,
+    alignItems: "flex-end"
   },
   check: {
     width: 23,
     height: 23,
     borderRadius: 12,
+    backgroundColor: colors.ocean,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -327,26 +298,20 @@ const styles = StyleSheet.create({
   mascotImage: {
     width: 112,
     height: 112,
-    marginTop: 5
+    marginTop: 3
   },
   languageName: {
     color: colors.polar,
     fontSize: 17,
     fontWeight: "900",
-    marginTop: 3,
-    textAlign: "center"
-  },
-  place: {
-    fontSize: 12,
-    fontWeight: "800",
-    marginTop: 3,
+    marginTop: 5,
     textAlign: "center"
   },
   description: {
     color: colors.muted,
     fontSize: 11,
     lineHeight: 15,
-    marginTop: 7,
+    marginTop: 6,
     textAlign: "center"
   },
   reactionBox: {
@@ -354,14 +319,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.snow,
     borderRadius: 18,
-    padding: 15,
+    padding: 13,
     marginTop: 22,
     borderWidth: 1,
     borderColor: colors.ice
   },
   reactionMascot: {
-    fontSize: 38,
-    marginRight: 12
+    width: 62,
+    height: 62,
+    marginRight: 10
   },
   reactionContent: {
     flex: 1
