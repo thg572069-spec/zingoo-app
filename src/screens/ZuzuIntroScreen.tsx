@@ -6,8 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  View,
-  useWindowDimensions
+  View
 } from "react-native";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { colors } from "../theme/colors";
@@ -21,83 +20,12 @@ const ZUZU_INTRO_VIDEO = require(
   "../../assets/videos/PixVerse_V6_Image_Text_720P_Der_uma_animac\u0327a\u0303o_n.mov.mp4"
 );
 
-function SnowDot({
-  left,
-  delay,
-  size
-}: {
-  left: string;
-  delay: number;
-  size: number;
-}) {
-  const fall = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          Animated.timing(fall, {
-            toValue: 1,
-            duration: 5000,
-            useNativeDriver: true
-          }),
-          Animated.sequence([
-            Animated.timing(opacity, {
-              toValue: 0.9,
-              duration: 700,
-              useNativeDriver: true
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 4300,
-              useNativeDriver: true
-            })
-          ])
-        ]),
-        Animated.timing(fall, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: true
-        })
-      ])
-    );
-
-    animation.start();
-    return () => animation.stop();
-  }, [fall, opacity, delay]);
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.snowDot,
-        {
-          left,
-          width: size,
-          height: size,
-          opacity,
-          transform: [
-            {
-              translateY: fall.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-10, 115]
-              })
-            }
-          ]
-        }
-      ]}
-    />
-  );
-}
-
-function FloatingCube({
+function IceCube({
   style,
-  delay
+  delay = 0
 }: {
   style: object;
-  delay: number;
+  delay?: number;
 }) {
   const movement = useRef(new Animated.Value(0)).current;
 
@@ -107,12 +35,12 @@ function FloatingCube({
         Animated.delay(delay),
         Animated.timing(movement, {
           toValue: 1,
-          duration: 2600,
+          duration: 2200,
           useNativeDriver: true
         }),
         Animated.timing(movement, {
           toValue: 0,
-          duration: 2600,
+          duration: 2200,
           useNativeDriver: true
         })
       ])
@@ -133,147 +61,56 @@ function FloatingCube({
             {
               translateY: movement.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0, -9]
+                outputRange: [0, -3]
               })
             },
             {
               rotate: movement.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["-8deg", "8deg"]
+                outputRange: ["-7deg", "7deg"]
               })
             }
           ]
         }
       ]}
     >
-      <View style={styles.cubeHighlight} />
-      <View style={styles.cubeReflection} />
+      <View style={styles.cubeShine} />
     </Animated.View>
   );
 }
 
-function Icicle({ style }: { style: object }) {
-  return (
-    <View pointerEvents="none" style={[styles.icicle, style]}>
-      <View style={styles.icicleShine} />
-    </View>
-  );
-}
-
-function MeltingDrop({
-  style,
-  delay
-}: {
-  style: object;
-  delay: number;
-}) {
-  const drop = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(drop, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true
-        }),
-        Animated.timing(drop, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: true
-        })
-      ])
-    );
-
-    animation.start();
-    return () => animation.stop();
-  }, [drop, delay]);
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.meltingDrop,
-        style,
-        {
-          opacity: drop.interpolate({
-            inputRange: [0, 0.2, 1],
-            outputRange: [0, 1, 0]
-          }),
-          transform: [
-            {
-              translateY: drop.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 19]
-              })
-            }
-          ]
-        }
-      ]}
-    />
-  );
-}
-
-function PolarFrame() {
+function SnowFrame() {
   return (
     <View pointerEvents="none" style={styles.frame}>
-      {/* Moldura superior */}
+      {/* Acabamento superior */}
       <View style={styles.topFrame}>
-        <View style={styles.topSnowBase} />
+        <View style={styles.topSnow} />
+        <View style={[styles.snowBump, styles.topBumpLeft]} />
+        <View style={[styles.snowBump, styles.topBumpCenter]} />
+        <View style={[styles.snowBump, styles.topBumpRight]} />
 
-        <View style={[styles.snowPuff, styles.puffTop1]} />
-        <View style={[styles.snowPuff, styles.puffTop2]} />
-        <View style={[styles.snowPuff, styles.puffTop3]} />
-        <View style={[styles.snowPuff, styles.puffTop4]} />
-        <View style={[styles.snowPuff, styles.puffTop5]} />
+        <View style={[styles.icicle, styles.icicleLeft]} />
+        <View style={[styles.icicle, styles.icicleCenter]} />
+        <View style={[styles.icicle, styles.icicleRight]} />
 
-        <Icicle style={styles.icicle1} />
-        <Icicle style={styles.icicle2} />
-        <Icicle style={styles.icicle3} />
-        <Icicle style={styles.icicle4} />
-        <Icicle style={styles.icicle5} />
-
-        <MeltingDrop style={styles.drop1} delay={200} />
-        <MeltingDrop style={styles.drop2} delay={900} />
-        <MeltingDrop style={styles.drop3} delay={1400} />
-
-        <FloatingCube style={styles.topCube1} delay={0} />
-        <FloatingCube style={styles.topCube2} delay={700} />
-
-        <SnowDot left="18%" delay={0} size={5} />
-        <SnowDot left="38%" delay={900} size={4} />
-        <SnowDot left="60%" delay={400} size={6} />
-        <SnowDot left="82%" delay={1200} size={4} />
+        <IceCube style={styles.topCubeLeft} />
+        <IceCube style={styles.topCubeRight} delay={700} />
       </View>
 
-      {/* Moldura inferior */}
+      {/* Acabamento inferior */}
       <View style={styles.bottomFrame}>
-        <View style={styles.bottomSnowBase} />
+        <View style={styles.bottomSnow} />
+        <View style={[styles.snowBump, styles.bottomBumpLeft]} />
+        <View style={[styles.snowBump, styles.bottomBumpRight]} />
 
-        <View style={[styles.snowPuff, styles.puffBottom1]} />
-        <View style={[styles.snowPuff, styles.puffBottom2]} />
-        <View style={[styles.snowPuff, styles.puffBottom3]} />
-        <View style={[styles.snowPuff, styles.puffBottom4]} />
-
-        <FloatingCube style={styles.bottomCube1} delay={500} />
-        <FloatingCube style={styles.bottomCube2} delay={1100} />
-
-        <View style={styles.iceCrystal} />
-        <View style={styles.iceCrystalSmall} />
-
-        <SnowDot left="15%" delay={500} size={5} />
-        <SnowDot left="45%" delay={1300} size={4} />
-        <SnowDot left="72%" delay={300} size={5} />
-        <SnowDot left="90%" delay={1600} size={4} />
+        <IceCube style={styles.bottomCubeLeft} delay={400} />
+        <IceCube style={styles.bottomCubeRight} delay={900} />
       </View>
     </View>
   );
 }
 
 export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
-  const { height } = useWindowDimensions();
-
   const [firstFrameRendered, setFirstFrameRendered] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
@@ -342,7 +179,7 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
         />
       </View>
 
-      <PolarFrame />
+      <SnowFrame />
 
       <Pressable
         style={StyleSheet.absoluteFill}
@@ -410,240 +247,131 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   topFrame: {
-    height: 105,
+    height: 30,
     backgroundColor: "#BDEFFF",
-    borderBottomWidth: 3,
+    borderBottomWidth: 1,
     borderBottomColor: "#FFFFFF",
     overflow: "hidden"
   },
-  topSnowBase: {
+  topSnow: {
     position: "absolute",
-    left: -20,
-    right: -20,
-    top: -23,
-    height: 78,
-    borderRadius: 45,
+    top: -15,
+    left: -10,
+    right: -10,
+    height: 29,
+    borderRadius: 20,
     backgroundColor: "#FFFFFF"
   },
-  snowPuff: {
+  snowBump: {
     position: "absolute",
     backgroundColor: "#FFFFFF",
-    borderRadius: 50
+    borderRadius: 20
   },
-  puffTop1: {
-    width: 95,
-    height: 42,
-    top: 28,
-    left: -15
+  topBumpLeft: {
+    top: 10,
+    left: 20,
+    width: 40,
+    height: 16
   },
-  puffTop2: {
-    width: 120,
-    height: 45,
-    top: 24,
-    left: "22%"
+  topBumpCenter: {
+    top: 12,
+    left: "48%",
+    width: 35,
+    height: 14
   },
-  puffTop3: {
-    width: 100,
-    height: 40,
-    top: 31,
-    left: "53%"
-  },
-  puffTop4: {
-    width: 110,
-    height: 45,
-    top: 23,
-    right: -20
-  },
-  puffTop5: {
-    width: 75,
-    height: 30,
-    top: 45,
-    left: "76%"
+  topBumpRight: {
+    top: 9,
+    right: 30,
+    width: 45,
+    height: 17
   },
   icicle: {
     position: "absolute",
-    top: 57,
-    width: 15,
-    height: 35,
-    borderRadius: 8,
+    top: 20,
+    width: 8,
+    height: 9,
+    borderRadius: 5,
     backgroundColor: "#80D8F4",
-    borderWidth: 2,
-    borderColor: "#E9FCFF"
-  },
-  icicleShine: {
-    position: "absolute",
-    left: 3,
-    top: 4,
-    width: 3,
-    height: 18,
-    borderRadius: 3,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.8
-  },
-  icicle1: {
-    left: "12%",
-    height: 27
-  },
-  icicle2: {
-    left: "35%",
-    height: 39
-  },
-  icicle3: {
-    left: "57%",
-    height: 24
-  },
-  icicle4: {
-    left: "76%",
-    height: 34
-  },
-  icicle5: {
-    right: "5%",
-    height: 22
-  },
-  meltingDrop: {
-    position: "absolute",
-    top: 83,
-    width: 7,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: "#55C9ED",
     borderWidth: 1,
     borderColor: "#FFFFFF"
   },
-  drop1: {
-    left: "35%"
+  icicleLeft: {
+    left: "27%"
   },
-  drop2: {
-    left: "57%"
+  icicleCenter: {
+    left: "69%",
+    height: 7
   },
-  drop3: {
-    left: "76%"
+  icicleRight: {
+    right: "13%",
+    height: 6
   },
   bottomFrame: {
-    height: 112,
+    height: 30,
     backgroundColor: "#BDEFFF",
-    borderTopWidth: 3,
+    borderTopWidth: 1,
     borderTopColor: "#FFFFFF",
     overflow: "hidden"
   },
-  bottomSnowBase: {
+  bottomSnow: {
     position: "absolute",
-    left: -20,
-    right: -20,
-    bottom: -32,
-    height: 100,
-    borderRadius: 55,
+    bottom: -17,
+    left: -10,
+    right: -10,
+    height: 30,
+    borderRadius: 20,
     backgroundColor: "#FFFFFF"
   },
-  puffBottom1: {
-    width: 100,
-    height: 42,
-    top: 4,
-    left: -25
+  bottomBumpLeft: {
+    top: 1,
+    left: 35,
+    width: 45,
+    height: 15
   },
-  puffBottom2: {
-    width: 120,
-    height: 45,
-    top: 0,
-    left: "25%"
-  },
-  puffBottom3: {
-    width: 95,
-    height: 40,
-    top: 5,
-    left: "60%"
-  },
-  puffBottom4: {
-    width: 110,
-    height: 45,
-    top: 0,
-    right: -25
+  bottomBumpRight: {
+    top: 2,
+    right: 35,
+    width: 48,
+    height: 14
   },
   iceCube: {
     position: "absolute",
-    width: 29,
-    height: 29,
-    borderRadius: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 4,
     backgroundColor: "#83D9F4",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#FFFFFF",
     shadowColor: "#168FCB",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    elevation: 3
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2
   },
-  cubeHighlight: {
+  cubeShine: {
     position: "absolute",
-    left: 4,
-    top: 4,
-    width: 9,
-    height: 5,
-    borderRadius: 5,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.9
-  },
-  cubeReflection: {
-    position: "absolute",
-    right: 4,
-    bottom: 4,
-    width: 7,
-    height: 7,
+    top: 2,
+    left: 2,
+    width: 5,
+    height: 3,
     borderRadius: 3,
-    backgroundColor: "#C9F5FF"
-  },
-  topCube1: {
-    top: 64,
-    left: "5%"
-  },
-  topCube2: {
-    top: 65,
-    right: "7%",
-    width: 23,
-    height: 23
-  },
-  bottomCube1: {
-    top: 42,
-    left: "16%"
-  },
-  bottomCube2: {
-    top: 42,
-    right: "15%",
-    width: 24,
-    height: 24
-  },
-  iceCrystal: {
-    position: "absolute",
-    right: "42%",
-    top: 30,
-    width: 17,
-    height: 35,
-    borderRadius: 8,
-    backgroundColor: "#79D5F2",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-    transform: [{ rotate: "25deg" }]
-  },
-  iceCrystalSmall: {
-    position: "absolute",
-    right: "39%",
-    top: 47,
-    width: 12,
-    height: 24,
-    borderRadius: 7,
-    backgroundColor: "#A2E9FA",
-    borderWidth: 1,
-    borderColor: "#FFFFFF",
-    transform: [{ rotate: "-20deg" }]
-  },
-  snowDot: {
-    position: "absolute",
-    top: 0,
-    borderRadius: 50,
     backgroundColor: "#FFFFFF"
   },
-  snowfall: {
-    ...StyleSheet.absoluteFillObject
+  topCubeLeft: {
+    top: 12,
+    left: 8
+  },
+  topCubeRight: {
+    top: 12,
+    right: 8
+  },
+  bottomCubeLeft: {
+    top: 11,
+    left: 10
+  },
+  bottomCubeRight: {
+    top: 11,
+    right: 10
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
