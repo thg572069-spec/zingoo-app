@@ -1,6 +1,11 @@
 
-import React, { useEffect, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  Platform,
+  StatusBar,
+  StyleSheet,
+  View
+} from "react-native";
 import { VideoView, useVideoPlayer } from "expo-video";
 
 import WelcomeScreen from "./src/screens/WelcomeScreen";
@@ -11,19 +16,54 @@ import LanguageScreen, {
 } from "./src/screens/LanguageScreen";
 
 type Screen = "welcome" | "zuzu" | "login" | "language";
-type OpeningStage = "loading" | "video" | "finished";
 
 const VIDEO_SOURCE = require(
   "./assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4"
 );
 
-export default function App() {
-  const [screen, setScreen] = useState<Screen>("welcome");
-  const [selectedLanguage, setSelectedLanguage] =
-    useState<Language | null>(null);
+const WEB_VIDEO_URL =
+  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4";
 
-  const [openingStage, setOpeningStage] =
-    useState<OpeningStage>("loading");
+type OpeningVideoProps = {
+  onFinish: () => void;
+};
+
+function WebOpeningVideo({ onFinish }: OpeningVideoProps) {
+  const [ready, setReady] = useState(false);
+
+  return React.createElement("video" as any, {
+    src: WEB_VIDEO_URL,
+    autoPlay: true,
+    muted: true,
+    playsInline: true,
+    controls: false,
+    preload: "auto",
+    disablePictureInPicture: true,
+    onCanPlay: (event: any) => {
+      setReady(true);
+
+      const playback = event.currentTarget.play();
+
+      if (playback && playback.catch) {
+        playback.catch(() => onFinish());
+      }
+    },
+    onPlay: () => setReady(true),
+    onEnded: onFinish,
+    onError: onFinish,
+    style: {
+      width: "100%",
+      height: "100%",
+      objectFit: "contain",
+      backgroundColor: "#0D6ED2",
+      display: "block",
+      opacity: ready ? 1 : 0
+    }
+  });
+}
+
+function NativeOpeningVideo({ onFinish }: OpeningVideoProps) {
+  const [hasFrame, setHasFrame] = useState(false);
 
   const player = useVideoPlayer(VIDEO_SOURCE, (videoPlayer) => {
     videoPlayer.loop = false;
@@ -39,23 +79,56 @@ export default function App() {
         }
 
         if (status === "error") {
-          setOpeningStage("finished");
+          onFinish();
         }
       }
     );
 
     const endSubscription = player.addListener(
       "playToEnd",
-      () => {
-        setOpeningStage("finished");
-      }
+      onFinish
     );
+
+    if (player.status === "readyToPlay") {
+      player.play();
+    }
+
+    if (player.status === "error") {
+      onFinish();
+    }
 
     return () => {
       statusSubscription.remove();
       endSubscription.remove();
     };
-  }, [player]);
+  }, [player, onFinish]);
+
+  return (
+    <VideoView
+      style={[
+        styles.video,
+        { opacity: hasFrame ? 1 : 0 }
+      ]}
+      player={player}
+      contentFit="contain"
+      nativeControls={false}
+      allowsPictureInPicture={false}
+      onFirstFrameRender={() => setHasFrame(true)}
+    />
+  );
+}
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>("welcome");
+
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<Language | null>(null);
+
+  const [showOpening, setShowOpening] = useState(true);
+
+  const finishOpening = useCallback(() => {
+    setShowOpening(false);
+  }, []);
 
   function handleLanguageContinue(language: Language) {
     setSelectedLanguage(language);
@@ -68,27 +141,15 @@ export default function App() {
         backgroundColor="#0D6ED2"
       />
 
-      {openingStage !== "finished" && (
+      {showOpening ? (
         <View style={styles.opening}>
-          <VideoView
-            style={[
-              styles.video,
-              {
-                opacity: openingStage === "video" ? 1 : 0
-              }
-            ]}
-            player={player}
-            contentFit="contain"
-            nativeControls={false}
-            allowsPictureInPicture={false}
-            onFirstFrameRender={() => {
-              setOpeningStage("video");
-            }}
-          />
+          {Platform.OS === "web" ? (
+            <WebOpeningVideo onFinish={finishOpening} />
+          ) : (
+            <NativeOpeningVideo onFinish={finishOpening} />
+          )}
         </View>
-      )}
-
-      {openingStage === "finished" && (
+      ) : (
         <>
           {screen === "welcome" && (
             <WelcomeScreen
