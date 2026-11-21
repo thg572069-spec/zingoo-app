@@ -83,6 +83,7 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
           player={player}
           contentFit="contain"
           nativeControls={false}
+          playsInline={true}
           allowsPictureInPicture={false}
           onFirstFrameRender={() => setFirstFrameRendered(true)}
         />
