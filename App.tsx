@@ -431,6 +431,11 @@ export default function App() {
   const currentScale =
     stage === "splash" ? splashScale : welcomeScale;
 
+  const splashVisualScale = Animated.multiply(
+    currentScale,
+    0.88
+  );
+
   return (
     <View style={styles.app}>
       <StatusBar
@@ -447,9 +452,13 @@ export default function App() {
                 opacity: currentOpacity,
                 transform: [
                   {
-                    translateY: stage === "splash" ? 35 : 0
+                    translateY: stage === "splash" ? 90 : 0
                   },
-                  { scale: currentScale }
+                  {
+                    scale: stage === "splash"
+                      ? splashVisualScale
+                      : currentScale
+                  }
                 ]
               }
             ]}
