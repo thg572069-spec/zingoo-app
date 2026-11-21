@@ -20,6 +20,143 @@ const ZUZU_INTRO_VIDEO = require(
   "../../assets/videos/PixVerse_V6_Image_Text_720P_Der_uma_animac\u0327a\u0303o_n.mov.mp4"
 );
 
+function Snowflake({
+  left,
+  delay,
+  size
+}: {
+  left: string;
+  delay: number;
+  size: number;
+}) {
+  const fall = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(fall, {
+            toValue: 1,
+            duration: 6500,
+            useNativeDriver: true
+          }),
+          Animated.sequence([
+            Animated.timing(opacity, {
+              toValue: 0.8,
+              duration: 1000,
+              useNativeDriver: true
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 5500,
+              useNativeDriver: true
+            })
+          ])
+        ]),
+        Animated.timing(fall, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true
+        })
+      ])
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [fall, opacity, delay]);
+
+  return (
+    <Animated.Text
+      pointerEvents="none"
+      style={[
+        styles.snowflake,
+        {
+          left,
+          fontSize: size,
+          opacity,
+          transform: [
+            {
+              translateY: fall.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-35, 620]
+              })
+            },
+            {
+              rotate: fall.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0deg", "180deg"]
+              })
+            }
+          ]
+        }
+      ]}
+    >
+      ❄
+    </Animated.Text>
+  );
+}
+
+function IceCube({
+  style,
+  delay
+}: {
+  style: object;
+  delay: number;
+}) {
+  const float = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(float, {
+          toValue: 1,
+          duration: 2600,
+          useNativeDriver: true
+        }),
+        Animated.timing(float, {
+          toValue: 0,
+          duration: 2600,
+          useNativeDriver: true
+        })
+      ])
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [float, delay]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.iceCube,
+        style,
+        {
+          transform: [
+            {
+              translateY: float.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -12]
+              })
+            },
+            {
+              rotate: float.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["-12deg", "12deg"]
+              })
+            }
+          ]
+        }
+      ]}
+    >
+      <View style={styles.iceCubeInner} />
+    </Animated.View>
+  );
+}
+
 export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
   const [firstFrameRendered, setFirstFrameRendered] = useState(false);
   const [showButton, setShowButton] = useState(false);
@@ -51,12 +188,11 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
     if (!firstFrameRendered) return;
 
     const timeout = setTimeout(() => {
-      player.pause();
       setShowButton(true);
     }, 4000);
 
     return () => clearTimeout(timeout);
-  }, [firstFrameRendered, player]);
+  }, [firstFrameRendered]);
 
   useEffect(() => {
     if (!showButton) return;
@@ -88,6 +224,23 @@ export default function ZuzuIntroScreen({ onContinue, onBack }: Props) {
           allowsPictureInPicture={false}
           onFirstFrameRender={() => setFirstFrameRendered(true)}
         />
+      </View>
+
+      <View pointerEvents="none" style={styles.decorations}>
+        <View style={styles.topIceBand} />
+        <View style={styles.bottomIceBand} />
+
+        <Snowflake left="8%" delay={0} size={17} />
+        <Snowflake left="23%" delay={1100} size={13} />
+        <Snowflake left="42%" delay={500} size={19} />
+        <Snowflake left="62%" delay={1800} size={14} />
+        <Snowflake left="79%" delay={800} size={18} />
+        <Snowflake left="92%" delay={2200} size={12} />
+
+        <IceCube style={styles.cubeTopLeft} delay={0} />
+        <IceCube style={styles.cubeTopRight} delay={700} />
+        <IceCube style={styles.cubeBottomLeft} delay={1200} />
+        <IceCube style={styles.cubeBottomRight} delay={400} />
       </View>
 
       <Pressable
@@ -150,6 +303,70 @@ const styles = StyleSheet.create({
   video: {
     width: "100%",
     height: "100%"
+  },
+  decorations: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: "hidden"
+  },
+  topIceBand: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 48,
+    backgroundColor: "rgba(189,239,255,0.12)"
+  },
+  bottomIceBand: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 78,
+    backgroundColor: "rgba(189,239,255,0.14)"
+  },
+  snowflake: {
+    position: "absolute",
+    top: 0,
+    color: "#FFFFFF",
+    textShadowColor: "rgba(22,143,203,0.55)",
+    textShadowRadius: 7
+  },
+  iceCube: {
+    position: "absolute",
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.85)"
+  },
+  iceCubeInner: {
+    flex: 1,
+    margin: 5,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.55)",
+    backgroundColor: "rgba(189,239,255,0.25)"
+  },
+  cubeTopLeft: {
+    top: 58,
+    left: 18
+  },
+  cubeTopRight: {
+    top: 78,
+    right: 20,
+    width: 22,
+    height: 22
+  },
+  cubeBottomLeft: {
+    bottom: 95,
+    left: 25,
+    width: 23,
+    height: 23
+  },
+  cubeBottomRight: {
+    bottom: 100,
+    right: 18
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
