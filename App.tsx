@@ -26,15 +26,23 @@ import LanguageScreen, {
 } from "./src/screens/LanguageScreen";
 
 type Screen = "welcome" | "zuzu" | "login" | "language";
+type OpeningStage = "splash" | "welcome" | "finished";
 
-const VIDEO_SOURCE = require(
-  "./assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4"
+const SPLASH_VIDEO = require(
+  "./assets/videos/1795239482359.mp4"
 );
 
-const WEB_VIDEO_URL =
-  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/64d5a1c3-28f8-44ae-8f95-6eb8117c3e18.mp4";
+const WELCOME_VIDEO = require(
+  "./assets/videos/1795239322930.mp4"
+);
 
-// Transição expansiva das telas
+const SPLASH_VIDEO_URL =
+  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795239482359.mp4";
+
+const WELCOME_VIDEO_URL =
+  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795239322930.mp4";
+
+// Transição expansiva das telas internas
 
 function ScreenTransition({
   children
@@ -104,19 +112,21 @@ function ScreenTransition({
   );
 }
 
-// Vídeo de abertura para navegador
+// Vídeo para navegador
 
-function WebOpeningVideo({
+function WebVideo({
+  source,
   onReady,
   onFinish
 }: {
+  source: string;
   onReady: () => void;
   onFinish: () => void;
 }) {
   const [ready, setReady] = useState(false);
 
   return React.createElement("video" as any, {
-    src: WEB_VIDEO_URL,
+    src: source,
     autoPlay: true,
     muted: true,
     playsInline: true,
@@ -154,18 +164,20 @@ function WebOpeningVideo({
   });
 }
 
-// Vídeo de abertura para iOS e Android
+// Vídeo nativo para iOS e Android
 
-function NativeOpeningVideo({
+function NativeVideo({
+  source,
   onReady,
   onFinish
 }: {
+  source: any;
   onReady: () => void;
   onFinish: () => void;
 }) {
   const [hasFrame, setHasFrame] = useState(false);
 
-  const player = useVideoPlayer(VIDEO_SOURCE, (videoPlayer) => {
+  const player = useVideoPlayer(source, (videoPlayer) => {
     videoPlayer.loop = false;
     videoPlayer.muted = false;
   });
@@ -221,87 +233,161 @@ function NativeOpeningVideo({
   );
 }
 
+// Componente que escolhe a reprodução conforme a plataforma
+
+function OpeningVideo({
+  stage,
+  onReady,
+  onFinish
+}: {
+  stage: "splash" | "welcome";
+  onReady: () => void;
+  onFinish: () => void;
+}) {
+  const nativeSource =
+    stage === "splash" ? SPLASH_VIDEO : WELCOME_VIDEO;
+
+  const webSource =
+    stage === "splash" ? SPLASH_VIDEO_URL : WELCOME_VIDEO_URL;
+
+  if (Platform.OS === "web") {
+    return (
+      <WebVideo
+        source={webSource}
+        onReady={onReady}
+        onFinish={onFinish}
+      />
+    );
+  }
+
+  return (
+    <NativeVideo
+      source={nativeSource}
+      onReady={onReady}
+      onFinish={onFinish}
+    />
+  );
+}
+
 export default function App() {
+  const [stage, setStage] = useState<OpeningStage>("splash");
+
   const [screen, setScreen] = useState<Screen>("welcome");
 
   const [selectedLanguage, setSelectedLanguage] =
     useState<Language | null>(null);
 
-  const [showOpening, setShowOpening] = useState(true);
+  const [videoReady, setVideoReady] = useState(false);
 
-  const openingFinished = useRef(false);
-  const videoStarted = useRef(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
-  const openingOpacity = useRef(new Animated.Value(0)).current;
-  const openingScale = useRef(new Animated.Value(0.96)).current;
+  const splashOpacity = useRef(new Animated.Value(0)).current;
+  const splashScale = useRef(new Animated.Value(0.96)).current;
 
   const welcomeOpacity = useRef(new Animated.Value(0)).current;
   const welcomeScale = useRef(new Animated.Value(0.96)).current;
 
-  const handleVideoReady = useCallback(() => {
-    if (videoStarted.current) return;
+  const splashFinished = useRef(false);
+  const welcomeFinished = useRef(false);
 
-    videoStarted.current = true;
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  const handleVideoReady = useCallback(() => {
+    setVideoReady(true);
+
+    const opacity = stage === "splash"
+      ? splashOpacity
+      : welcomeOpacity;
+
+    const scale = stage === "splash"
+      ? splashScale
+      : welcomeScale;
+
+    if (reduceMotion) {
+      opacity.setValue(1);
+      scale.setValue(1);
+      return;
+    }
 
     Animated.parallel([
-      Animated.timing(openingOpacity, {
+      Animated.timing(opacity, {
         toValue: 1,
-        duration: 350,
+        duration: 400,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false
       }),
-      Animated.timing(openingScale, {
+      Animated.timing(scale, {
         toValue: 1,
-        duration: 450,
+        duration: 500,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false
       })
     ]).start();
-  }, [openingOpacity, openingScale]);
+  }, [
+    stage,
+    reduceMotion,
+    splashOpacity,
+    splashScale,
+    welcomeOpacity,
+    welcomeScale
+  ]);
 
-  const finishOpening = useCallback(() => {
-    if (openingFinished.current) return;
+  const handleSplashFinish = useCallback(() => {
+    if (splashFinished.current) return;
 
-    openingFinished.current = true;
+    splashFinished.current = true;
+    setVideoReady(false);
+
+    if (reduceMotion) {
+      setStage("welcome");
+      return;
+    }
 
     Animated.parallel([
-      Animated.timing(openingOpacity, {
+      Animated.timing(splashOpacity, {
         toValue: 0,
         duration: 450,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: false
       }),
-      Animated.timing(openingScale, {
-        toValue: 1.22,
+      Animated.timing(splashScale, {
+        toValue: 1.2,
         duration: 550,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: false
-      }),
-      Animated.timing(welcomeOpacity, {
-        toValue: 1,
-        duration: 450,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false
-      }),
-      Animated.timing(welcomeScale, {
-        toValue: 1,
-        duration: 550,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false
       })
     ]).start(() => {
-      setShowOpening(false);
+      setStage("welcome");
     });
-  }, [
-    openingOpacity,
-    openingScale,
-    welcomeOpacity,
-    welcomeScale
-  ]);
+  }, [reduceMotion, splashOpacity, splashScale]);
+
+  const handleWelcomeFinish = useCallback(() => {
+    if (welcomeFinished.current) return;
+
+    welcomeFinished.current = true;
+
+    // O vídeo permanece no último quadro.
+    // A tela de boas-vindas continua com os botões disponíveis.
+  }, []);
 
   function handleLanguageContinue(language: Language) {
     setSelectedLanguage(language);
   }
+
+  const currentOpacity =
+    stage === "splash" ? splashOpacity : welcomeOpacity;
+
+  const currentScale =
+    stage === "splash" ? splashScale : welcomeScale;
 
   return (
     <View style={styles.app}>
@@ -310,16 +396,43 @@ export default function App() {
         backgroundColor="#0D6ED2"
       />
 
-      {!showOpening && (
-        <View style={styles.screenContainer}>
-          <ScreenTransition key={screen}>
-            {screen === "welcome" && (
+      {stage !== "finished" && (
+        <View style={styles.opening}>
+          <Animated.View
+            style={[
+              styles.videoLayer,
+              {
+                opacity: currentOpacity,
+                transform: [{ scale: currentScale }]
+              }
+            ]}
+          >
+            <OpeningVideo
+              key={stage}
+              stage={stage === "splash" ? "splash" : "welcome"}
+              onReady={handleVideoReady}
+              onFinish={
+                stage === "splash"
+                  ? handleSplashFinish
+                  : handleWelcomeFinish
+              }
+            />
+          </Animated.View>
+
+          {stage === "welcome" && videoReady && (
+            <View style={styles.welcomeButtons}>
               <WelcomeScreen
                 onStart={() => setScreen("zuzu")}
                 onLogin={() => setScreen("login")}
               />
-            )}
+            </View>
+          )}
+        </View>
+      )}
 
+      {stage === "finished" && (
+        <View style={styles.screenContainer}>
+          <ScreenTransition key={screen}>
             {screen === "zuzu" && (
               <ZuzuIntroScreen
                 onContinue={() => setScreen("language")}
@@ -343,47 +456,6 @@ export default function App() {
           </ScreenTransition>
         </View>
       )}
-
-      {showOpening && (
-        <View style={styles.opening}>
-          <Animated.View
-            style={[
-              styles.welcomeReveal,
-              {
-                opacity: welcomeOpacity,
-                transform: [{ scale: welcomeScale }]
-              }
-            ]}
-          >
-            <WelcomeScreen
-              onStart={() => setScreen("zuzu")}
-              onLogin={() => setScreen("login")}
-            />
-          </Animated.View>
-
-          <Animated.View
-            style={[
-              styles.videoLayer,
-              {
-                opacity: openingOpacity,
-                transform: [{ scale: openingScale }]
-              }
-            ]}
-          >
-            {Platform.OS === "web" ? (
-              <WebOpeningVideo
-                onReady={handleVideoReady}
-                onFinish={finishOpening}
-              />
-            ) : (
-              <NativeOpeningVideo
-                onReady={handleVideoReady}
-                onFinish={finishOpening}
-              />
-            )}
-          </Animated.View>
-        </View>
-      )}
     </View>
   );
 }
@@ -397,12 +469,7 @@ const styles = StyleSheet.create({
   opening: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#0D6ED2",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-
-  welcomeReveal: {
-    ...StyleSheet.absoluteFillObject
+    overflow: "hidden"
   },
 
   videoLayer: {
@@ -415,6 +482,10 @@ const styles = StyleSheet.create({
   video: {
     width: "100%",
     height: "100%"
+  },
+
+  welcomeButtons: {
+    ...StyleSheet.absoluteFillObject
   },
 
   screenContainer: {
