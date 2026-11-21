@@ -32,6 +32,9 @@ jobs:
       - name: Install project dependencies
         run: npm install
 
+      - name: Verify expo-blur installation
+        run: npm ls expo-blur
+
       - name: Install Expo web dependencies
         run: npx expo install react-dom react-native-web @expo/metro-runtime
 
