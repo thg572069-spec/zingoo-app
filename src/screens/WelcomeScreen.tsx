@@ -70,37 +70,65 @@ const styles = StyleSheet.create({
   },
 
   primaryButton: {
-    backgroundColor: "#FFD166",
+    backgroundColor: "rgba(255, 255, 255, 0.28)",
     paddingVertical: 18,
     paddingHorizontal: 20,
     borderRadius: 22,
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#FFFFFF"
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.85)",
+    shadowColor: "#163E70",
+    shadowOffset: {
+      width: 0,
+      height: 5
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 7
   },
 
   primaryButtonText: {
-    color: "#254B82",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "900",
-    textAlign: "center"
+    textAlign: "center",
+    textShadowColor: "rgba(20, 55, 95, 0.35)",
+    textShadowOffset: {
+      width: 0,
+      height: 1
+    },
+    textShadowRadius: 3
   },
 
   secondaryButton: {
-    backgroundColor: "rgba(13, 110, 210, 0.88)",
+    backgroundColor: "rgba(13, 110, 210, 0.30)",
     paddingVertical: 17,
     paddingHorizontal: 20,
     borderRadius: 22,
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#FFFFFF"
+    borderColor: "rgba(255, 255, 255, 0.65)",
+    shadowColor: "#163E70",
+    shadowOffset: {
+      width: 0,
+      height: 4
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 5
   },
 
   secondaryButtonText: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "800",
-    textAlign: "center"
+    textAlign: "center",
+    textShadowColor: "rgba(20, 55, 95, 0.4)",
+    textShadowOffset: {
+      width: 0,
+      height: 1
+    },
+    textShadowRadius: 3
   },
 
   pressed: {
