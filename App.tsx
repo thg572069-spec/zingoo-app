@@ -42,7 +42,7 @@ const SPLASH_VIDEO_URL =
 const WELCOME_VIDEO_URL =
   "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795239322930.mp4";
 
-// Transição expansiva das telas internas
+// Transição das telas internas
 
 function ScreenTransition({
   children
@@ -117,18 +117,23 @@ function ScreenTransition({
 function WebVideo({
   source,
   onReady,
-  onFinish
+  onFinish,
+  loop,
+  fit
 }: {
   source: string;
   onReady: () => void;
   onFinish: () => void;
+  loop: boolean;
+  fit: "cover" | "contain";
 }) {
   const [ready, setReady] = useState(false);
 
   return React.createElement("video" as any, {
     src: source,
     autoPlay: true,
-    muted: true,
+    muted: false,
+    loop,
     playsInline: true,
     controls: false,
     preload: "auto",
@@ -140,8 +145,18 @@ function WebVideo({
 
       const playback = event.currentTarget.play();
 
+      // O Safari pode exigir um toque do usuário
+      // antes de permitir reprodução com áudio.
       if (playback && playback.catch) {
-        playback.catch(() => onFinish());
+        playback.catch(() => {});
+      }
+    },
+
+    onClick: (event: any) => {
+      const playback = event.currentTarget.play();
+
+      if (playback && playback.catch) {
+        playback.catch(() => {});
       }
     },
 
@@ -150,15 +165,22 @@ function WebVideo({
       onReady();
     },
 
-    onEnded: onFinish,
-    onError: onFinish,
+    onEnded: () => {
+      if (!loop) onFinish();
+    },
+
+    onError: () => {
+      if (!loop) onFinish();
+    },
 
     style: {
       width: "100%",
       height: "100%",
-      objectFit: "contain",
+      objectFit: fit,
       backgroundColor: "#0D6ED2",
       display: "block",
+      border: 0,
+      outline: "none",
       opacity: ready ? 1 : 0
     }
   });
@@ -169,16 +191,20 @@ function WebVideo({
 function NativeVideo({
   source,
   onReady,
-  onFinish
+  onFinish,
+  loop,
+  fit
 }: {
   source: any;
   onReady: () => void;
   onFinish: () => void;
+  loop: boolean;
+  fit: "cover" | "contain";
 }) {
   const [hasFrame, setHasFrame] = useState(false);
 
   const player = useVideoPlayer(source, (videoPlayer) => {
-    videoPlayer.loop = false;
+    videoPlayer.loop = loop;
     videoPlayer.muted = false;
   });
 
@@ -190,7 +216,7 @@ function NativeVideo({
           player.play();
         }
 
-        if (status === "error") {
+        if (status === "error" && !loop) {
           onFinish();
         }
       }
@@ -198,14 +224,16 @@ function NativeVideo({
 
     const endSubscription = player.addListener(
       "playToEnd",
-      onFinish
+      () => {
+        if (!loop) onFinish();
+      }
     );
 
     if (player.status === "readyToPlay") {
       player.play();
     }
 
-    if (player.status === "error") {
+    if (player.status === "error" && !loop) {
       onFinish();
     }
 
@@ -213,7 +241,7 @@ function NativeVideo({
       statusSubscription.remove();
       endSubscription.remove();
     };
-  }, [player, onFinish]);
+  }, [player, onFinish, loop]);
 
   return (
     <VideoView
@@ -222,7 +250,7 @@ function NativeVideo({
         { opacity: hasFrame ? 1 : 0 }
       ]}
       player={player}
-      contentFit="contain"
+      contentFit={fit}
       nativeControls={false}
       allowsPictureInPicture={false}
       onFirstFrameRender={() => {
@@ -233,7 +261,7 @@ function NativeVideo({
   );
 }
 
-// Componente que escolhe a reprodução conforme a plataforma
+// Escolhe a reprodução conforme a plataforma
 
 function OpeningVideo({
   stage,
@@ -244,11 +272,18 @@ function OpeningVideo({
   onReady: () => void;
   onFinish: () => void;
 }) {
-  const nativeSource =
-    stage === "splash" ? SPLASH_VIDEO : WELCOME_VIDEO;
+  const isWelcome = stage === "welcome";
 
-  const webSource =
-    stage === "splash" ? SPLASH_VIDEO_URL : WELCOME_VIDEO_URL;
+  const nativeSource = isWelcome
+    ? WELCOME_VIDEO
+    : SPLASH_VIDEO;
+
+  const webSource = isWelcome
+    ? WELCOME_VIDEO_URL
+    : SPLASH_VIDEO_URL;
+
+  const loop = isWelcome;
+  const fit = isWelcome ? "cover" : "contain";
 
   if (Platform.OS === "web") {
     return (
@@ -256,6 +291,8 @@ function OpeningVideo({
         source={webSource}
         onReady={onReady}
         onFinish={onFinish}
+        loop={loop}
+        fit={fit}
       />
     );
   }
@@ -265,6 +302,8 @@ function OpeningVideo({
       source={nativeSource}
       onReady={onReady}
       onFinish={onFinish}
+      loop={loop}
+      fit={fit}
     />
   );
 }
@@ -288,7 +327,6 @@ export default function App() {
   const welcomeScale = useRef(new Animated.Value(0.96)).current;
 
   const splashFinished = useRef(false);
-  const welcomeFinished = useRef(false);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -370,14 +408,20 @@ export default function App() {
     });
   }, [reduceMotion, splashOpacity, splashScale]);
 
-  const handleWelcomeFinish = useCallback(() => {
-    if (welcomeFinished.current) return;
+  function openInternalScreen(nextScreen: Screen) {
+    setScreen(nextScreen);
+    setStage("finished");
+  }
 
-    welcomeFinished.current = true;
+  function backToWelcome() {
+    setScreen("welcome");
+    setVideoReady(false);
 
-    // O vídeo permanece no último quadro.
-    // A tela de boas-vindas continua com os botões disponíveis.
-  }, []);
+    welcomeOpacity.setValue(0);
+    welcomeScale.setValue(0.96);
+
+    setStage("welcome");
+  }
 
   function handleLanguageContinue(language: Language) {
     setSelectedLanguage(language);
@@ -411,19 +455,15 @@ export default function App() {
               key={stage}
               stage={stage === "splash" ? "splash" : "welcome"}
               onReady={handleVideoReady}
-              onFinish={
-                stage === "splash"
-                  ? handleSplashFinish
-                  : handleWelcomeFinish
-              }
+              onFinish={handleSplashFinish}
             />
           </Animated.View>
 
           {stage === "welcome" && videoReady && (
             <View style={styles.welcomeButtons}>
               <WelcomeScreen
-                onStart={() => setScreen("zuzu")}
-                onLogin={() => setScreen("login")}
+                onStart={() => openInternalScreen("zuzu")}
+                onLogin={() => openInternalScreen("login")}
               />
             </View>
           )}
@@ -435,14 +475,14 @@ export default function App() {
           <ScreenTransition key={screen}>
             {screen === "zuzu" && (
               <ZuzuIntroScreen
-                onContinue={() => setScreen("language")}
-                onBack={() => setScreen("welcome")}
+                onContinue={() => openInternalScreen("language")}
+                onBack={backToWelcome}
               />
             )}
 
             {screen === "login" && (
               <LoginScreen
-                onBack={() => setScreen("welcome")}
+                onBack={backToWelcome}
               />
             )}
 
@@ -450,7 +490,7 @@ export default function App() {
               <LanguageScreen
                 initialLanguage={selectedLanguage}
                 onContinue={handleLanguageContinue}
-                onBack={() => setScreen("zuzu")}
+                onBack={() => openInternalScreen("zuzu")}
               />
             )}
           </ScreenTransition>
