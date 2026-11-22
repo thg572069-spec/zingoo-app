@@ -249,7 +249,7 @@ function WebWelcomeVideo({
           style: {
             width: "100%",
             height: "100%",
-            objectFit: "contain",
+            objectFit: "cover",
             display: "block",
             opacity: foregroundReady ? 1 : 0
           }
@@ -434,7 +434,7 @@ function NativeWelcomeVideo({
           { opacity: hasFrame ? 1 : 0 }
         ]}
         player={foregroundPlayer}
-        contentFit="contain"
+        contentFit="cover"
         nativeControls={false}
         allowsPictureInPicture={false}
         onFirstFrameRender={handleFirstFrame}
