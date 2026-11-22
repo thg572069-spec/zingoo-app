@@ -1,12 +1,14 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 import {
   SafeAreaView,
   View,
   Text,
   StyleSheet,
-  Pressable
+  Pressable,
+  Animated,
+  Easing
 } from "react-native";
 
 type Props = {
@@ -18,9 +20,50 @@ export default function WelcomeScreen({
   onStart,
   onLogin
 }: Props) {
+  const taglineOpacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const taglineTranslate = useRef(
+    new Animated.Value(6)
+  ).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(taglineOpacity, {
+        toValue: 1,
+        duration: 1100,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true
+      }),
+      Animated.timing(taglineTranslate, {
+        toValue: 0,
+        duration: 1100,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [taglineOpacity, taglineTranslate]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <View style={styles.brandMessage}>
+          <Animated.Text
+            style={[
+              styles.tagline,
+              {
+                opacity: taglineOpacity,
+                transform: [
+                  { translateY: taglineTranslate }
+                ]
+              }
+            ]}
+          >
+            Aprenda. Ganhe. Divirta-se.
+          </Animated.Text>
+        </View>
+
         <View style={styles.actions}>
           <Pressable
             style={({ pressed }) => [
@@ -30,7 +73,7 @@ export default function WelcomeScreen({
             onPress={onStart}
           >
             <Text style={styles.primaryButtonText}>
-              Começar minha aventura
+              Começar
             </Text>
           </Pressable>
 
@@ -42,7 +85,7 @@ export default function WelcomeScreen({
             onPress={onLogin}
           >
             <Text style={styles.secondaryButtonText}>
-              Já tenho uma conta — Entrar
+              Entrar
             </Text>
           </Pressable>
         </View>
@@ -62,6 +105,25 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingHorizontal: 24,
     paddingBottom: 22
+  },
+
+  brandMessage: {
+    alignItems: "center",
+    marginBottom: 25
+  },
+
+  tagline: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: 1.2,
+    textAlign: "center",
+    textShadowColor: "rgba(20, 55, 95, 0.3)",
+    textShadowOffset: {
+      width: 0,
+      height: 1
+    },
+    textShadowRadius: 4
   },
 
   actions: {
