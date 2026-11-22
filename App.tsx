@@ -34,14 +34,14 @@ const SPLASH_VIDEO = require(
 );
 
 const WELCOME_VIDEO = require(
-  "./assets/videos/1795239322930.mp4"
+  "./assets/videos/1795376843324.mp4"
 );
 
 const SPLASH_VIDEO_URL =
   "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795239482359.mp4";
 
 const WELCOME_VIDEO_URL =
-  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795239322930.mp4";
+  "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795376843324.mp4";
 
 // Transição das telas internas
 
