@@ -27,6 +27,9 @@ import LanguageScreen, {
   Language
 } from "./src/screens/LanguageScreen";
 import CuriosityScreen from "./src/screens/CuriosityScreen";
+import ReferralSourceScreen, {
+  ReferralSource
+} from "./src/screens/ReferralSourceScreen";
 
 type Screen =
   | "welcome"
@@ -35,6 +38,7 @@ type Screen =
   | "login"
   | "language"
   | "curiosity"
+  | "referral"
   | "next";
 
 type OpeningStage = "splash" | "welcome" | "finished";
@@ -511,6 +515,9 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] =
     useState<Language | null>(null);
 
+  const [selectedReferralSource, setSelectedReferralSource] =
+    useState<ReferralSource | null>(null);
+
   const [videoReady, setVideoReady] = useState(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -623,6 +630,11 @@ export default function App() {
     openInternalScreen("curiosity");
   }
 
+  function handleReferralContinue(source: ReferralSource) {
+    setSelectedReferralSource(source);
+    openInternalScreen("next");
+  }
+
   const currentOpacity =
     stage === "splash" ? splashOpacity : welcomeOpacity;
 
@@ -707,7 +719,15 @@ export default function App() {
             {screen === "curiosity" && selectedLanguage && (
               <CuriosityScreen
                 language={selectedLanguage}
-                onContinue={() => openInternalScreen("next")}
+                onContinue={() => openInternalScreen("referral")}
+              />
+            )}
+
+            {screen === "referral" && (
+              <ReferralSourceScreen
+                initialSource={selectedReferralSource}
+                onContinue={handleReferralContinue}
+                onBack={() => openInternalScreen("language")}
               />
             )}
 
