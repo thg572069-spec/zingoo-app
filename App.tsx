@@ -68,6 +68,7 @@ const WELCOME_VIDEO_URL =
   "https://raw.githubusercontent.com/thg572069-spec/zingoo-app/main/assets/videos/1795376843324.mp4";
 
 // Transição das telas internas
+// Corrigida para não depender do AccessibilityInfo no Safari.
 
 function ScreenTransition({
   children
@@ -77,28 +78,7 @@ function ScreenTransition({
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
 
-  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
-
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      setReduceMotion
-    );
-
-    return () => subscription.remove();
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion === null) return;
-
-    if (reduceMotion) {
-      opacity.setValue(1);
-      scale.setValue(1);
-      return;
-    }
-
     opacity.setValue(0);
     scale.setValue(0.96);
 
@@ -120,7 +100,7 @@ function ScreenTransition({
     animation.start();
 
     return () => animation.stop();
-  }, [reduceMotion, opacity, scale]);
+  }, [opacity, scale]);
 
   return (
     <Animated.View
@@ -547,14 +527,24 @@ export default function App() {
   const splashFinished = useRef(false);
 
   useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(setReduceMotion)
+      .catch(() => setReduceMotion(false));
 
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      setReduceMotion
-    );
+    let subscription:
+      | ReturnType<typeof AccessibilityInfo.addEventListener>
+      | undefined;
 
-    return () => subscription.remove();
+    try {
+      subscription = AccessibilityInfo.addEventListener(
+        "reduceMotionChanged",
+        setReduceMotion
+      );
+    } catch {
+      setReduceMotion(false);
+    }
+
+    return () => subscription?.remove();
   }, []);
 
   const handleVideoReady = useCallback(() => {
