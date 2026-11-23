@@ -1,4 +1,3 @@
-
 import React, {
   useCallback,
   useEffect,
@@ -33,6 +32,7 @@ import ReferralSourceScreen, {
 import LanguageLevelScreen, {
   LanguageLevel
 } from "./src/screens/LanguageLevelScreen";
+import PersonalizedWelcomeScreen from "./src/screens/PersonalizedWelcomeScreen";
 
 type Screen =
   | "welcome"
@@ -43,6 +43,7 @@ type Screen =
   | "curiosity"
   | "referral"
   | "level"
+  | "personalized"
   | "next";
 
 type OpeningStage = "splash" | "welcome" | "finished";
@@ -644,6 +645,10 @@ export default function App() {
 
   function handleLevelContinue(level: LanguageLevel) {
     setSelectedLevel(level);
+    openInternalScreen("personalized");
+  }
+
+  function handlePersonalizedContinue() {
     openInternalScreen("next");
   }
 
@@ -748,6 +753,13 @@ export default function App() {
                 initialLevel={selectedLevel}
                 onContinue={handleLevelContinue}
                 onBack={() => openInternalScreen("referral")}
+              />
+            )}
+
+            {screen === "personalized" && selectedLevel && (
+              <PersonalizedWelcomeScreen
+                level={selectedLevel}
+                onContinue={handlePersonalizedContinue}
               />
             )}
 
