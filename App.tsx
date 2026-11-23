@@ -1,3 +1,4 @@
+
 import React, {
   useCallback,
   useEffect,
@@ -33,6 +34,9 @@ import LanguageLevelScreen, {
   LanguageLevel
 } from "./src/screens/LanguageLevelScreen";
 import PersonalizedWelcomeScreen from "./src/screens/PersonalizedWelcomeScreen";
+import LearningReasonsScreen, {
+  LearningReason
+} from "./src/screens/LearningReasonsScreen";
 
 type Screen =
   | "welcome"
@@ -44,6 +48,7 @@ type Screen =
   | "referral"
   | "level"
   | "personalized"
+  | "reasons"
   | "next";
 
 type OpeningStage = "splash" | "welcome" | "finished";
@@ -526,6 +531,9 @@ export default function App() {
   const [selectedLevel, setSelectedLevel] =
     useState<LanguageLevel | null>(null);
 
+  const [selectedReasons, setSelectedReasons] =
+    useState<LearningReason[]>([]);
+
   const [videoReady, setVideoReady] = useState(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -649,6 +657,11 @@ export default function App() {
   }
 
   function handlePersonalizedContinue() {
+    openInternalScreen("reasons");
+  }
+
+  function handleReasonsContinue(reasons: LearningReason[]) {
+    setSelectedReasons(reasons);
     openInternalScreen("next");
   }
 
@@ -760,6 +773,14 @@ export default function App() {
               <PersonalizedWelcomeScreen
                 level={selectedLevel}
                 onContinue={handlePersonalizedContinue}
+              />
+            )}
+
+            {screen === "reasons" && (
+              <LearningReasonsScreen
+                initialReasons={selectedReasons}
+                onContinue={handleReasonsContinue}
+                onBack={() => openInternalScreen("level")}
               />
             )}
 
