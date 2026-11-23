@@ -26,13 +26,16 @@ import LoginScreen from "./src/screens/LoginScreen";
 import LanguageScreen, {
   Language
 } from "./src/screens/LanguageScreen";
+import CuriosityScreen from "./src/screens/CuriosityScreen";
 
 type Screen =
   | "welcome"
   | "zuzu"
   | "benefits"
   | "login"
-  | "language";
+  | "language"
+  | "curiosity"
+  | "next";
 
 type OpeningStage = "splash" | "welcome" | "finished";
 
@@ -617,6 +620,7 @@ export default function App() {
 
   function handleLanguageContinue(language: Language) {
     setSelectedLanguage(language);
+    openInternalScreen("curiosity");
   }
 
   const currentOpacity =
@@ -699,6 +703,17 @@ export default function App() {
                 onBack={() => openInternalScreen("benefits")}
               />
             )}
+
+            {screen === "curiosity" && selectedLanguage && (
+              <CuriosityScreen
+                language={selectedLanguage}
+                onContinue={() => openInternalScreen("next")}
+              />
+            )}
+
+            {screen === "next" && (
+              <View style={styles.emptyNextScreen} />
+            )}
           </ScreenTransition>
         </View>
       )}
@@ -760,5 +775,10 @@ const styles = StyleSheet.create({
 
   transition: {
     flex: 1
+  },
+
+  emptyNextScreen: {
+    flex: 1,
+    backgroundColor: "#DDF3FF"
   }
 });
