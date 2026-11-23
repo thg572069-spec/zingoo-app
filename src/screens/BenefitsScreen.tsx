@@ -110,7 +110,7 @@ export default function BenefitsScreen({ onContinue }: Props) {
       })
     ]).start();
 
-    const transition = setTimeout(onContinue, 3000);
+    const transition = setTimeout(onContinue, 5000);
     return () => clearTimeout(transition);
   }, [onContinue, titleOpacity, titleTranslate, footerOpacity]);
 
@@ -133,9 +133,7 @@ export default function BenefitsScreen({ onContinue }: Props) {
               }
             ]}
           >
-            <Text style={styles.eyebrow}>
-              SEU MUNDO, NOVAS POSSIBILIDADES
-            </Text>
+            <Text style={styles.eyebrow}>SEU MUNDO, NOVAS POSSIBILIDADES</Text>
 
             <Text style={styles.title}>
               Na ZINGOO, você
@@ -184,7 +182,6 @@ export default function BenefitsScreen({ onContinue }: Props) {
               A diversão é{" "}
               <Text style={styles.footerHighlight}>garantida!</Text>
             </Text>
-
             <View style={styles.progressTrack}>
               <View style={styles.progressFill} />
             </View>
