@@ -30,6 +30,9 @@ import CuriosityScreen from "./src/screens/CuriosityScreen";
 import ReferralSourceScreen, {
   ReferralSource
 } from "./src/screens/ReferralSourceScreen";
+import LanguageLevelScreen, {
+  LanguageLevel
+} from "./src/screens/LanguageLevelScreen";
 
 type Screen =
   | "welcome"
@@ -39,6 +42,7 @@ type Screen =
   | "language"
   | "curiosity"
   | "referral"
+  | "level"
   | "next";
 
 type OpeningStage = "splash" | "welcome" | "finished";
@@ -518,6 +522,9 @@ export default function App() {
   const [selectedReferralSource, setSelectedReferralSource] =
     useState<ReferralSource | null>(null);
 
+  const [selectedLevel, setSelectedLevel] =
+    useState<LanguageLevel | null>(null);
+
   const [videoReady, setVideoReady] = useState(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -632,6 +639,11 @@ export default function App() {
 
   function handleReferralContinue(source: ReferralSource) {
     setSelectedReferralSource(source);
+    openInternalScreen("level");
+  }
+
+  function handleLevelContinue(level: LanguageLevel) {
+    setSelectedLevel(level);
     openInternalScreen("next");
   }
 
@@ -728,6 +740,14 @@ export default function App() {
                 initialSource={selectedReferralSource}
                 onContinue={handleReferralContinue}
                 onBack={() => openInternalScreen("language")}
+              />
+            )}
+
+            {screen === "level" && (
+              <LanguageLevelScreen
+                initialLevel={selectedLevel}
+                onContinue={handleLevelContinue}
+                onBack={() => openInternalScreen("referral")}
               />
             )}
 
