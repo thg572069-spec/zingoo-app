@@ -25,6 +25,72 @@ const SPEECH =
 
 const SPEECH_WORDS = SPEECH.split(" ");
 
+function Sparkle({
+  style,
+  delay = 0
+}: {
+  style: object;
+  delay?: number;
+}) {
+  const twinkle = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(twinkle, {
+          toValue: 1,
+          duration: 850,
+          useNativeDriver: true
+        }),
+        Animated.timing(twinkle, {
+          toValue: 0,
+          duration: 850,
+          useNativeDriver: true
+        }),
+        Animated.delay(450)
+      ])
+    );
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [twinkle, delay]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.sparkle,
+        style,
+        {
+          opacity: twinkle.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.25, 1]
+          }),
+          transform: [
+            {
+              scale: twinkle.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.55, 1.2]
+              })
+            },
+            {
+              rotate: twinkle.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0deg", "45deg"]
+              })
+            }
+          ]
+        }
+      ]}
+    >
+      <View style={styles.sparkleVertical} />
+      <View style={styles.sparkleHorizontal} />
+    </Animated.View>
+  );
+}
+
 export default function ZuzuIntroScreen({
   onContinue,
   onBack
@@ -36,7 +102,7 @@ export default function ZuzuIntroScreen({
   const bubbleScale = useRef(new Animated.Value(0.96)).current;
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
-  const buttonScale = useRef(new Animated.Value(0.94)).current;
+  const buttonScale = useRef(new Animated.Value(0.92)).current;
 
   const wordAnimations = useRef(
     SPEECH_WORDS.map(() => new Animated.Value(0))
@@ -74,9 +140,13 @@ export default function ZuzuIntroScreen({
       )
     ).start();
 
+    // O botão aparece logo após a entrada da última palavra.
+    const speechDuration =
+      75 * (SPEECH_WORDS.length - 1) + 260;
+
     const timeout = setTimeout(() => {
       setShowButton(true);
-    }, 5200);
+    }, speechDuration + 250);
 
     return () => clearTimeout(timeout);
   }, [
@@ -92,7 +162,7 @@ export default function ZuzuIntroScreen({
     Animated.parallel([
       Animated.timing(buttonOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: 350,
         useNativeDriver: true
       }),
       Animated.spring(buttonScale, {
@@ -138,6 +208,11 @@ export default function ZuzuIntroScreen({
             }
           ]}
         >
+          {/* Brilhos delicados ao redor do balão */}
+          <Sparkle style={styles.sparkleTopLeft} delay={100} />
+          <Sparkle style={styles.sparkleTopRight} delay={600} />
+          <Sparkle style={styles.sparkleBottomLeft} delay={350} />
+
           <Text style={styles.speechText}>
             {SPEECH_WORDS.map((word, index) => (
               <Animated.Text
@@ -160,16 +235,15 @@ export default function ZuzuIntroScreen({
             ))}
           </Text>
 
-          <View style={styles.bubbleTail} />
-        </Animated.View>
-
-        <View style={styles.bottomArea}>
           {showButton && (
             <Animated.View
-              style={{
-                opacity: buttonOpacity,
-                transform: [{ scale: buttonScale }]
-              }}
+              style={[
+                styles.buttonContainer,
+                {
+                  opacity: buttonOpacity,
+                  transform: [{ scale: buttonScale }]
+                }
+              ]}
             >
               <Pressable
                 style={({ pressed }) => [
@@ -187,7 +261,11 @@ export default function ZuzuIntroScreen({
               </Pressable>
             </Animated.View>
           )}
-        </View>
+
+          <View style={styles.bubbleTail} />
+        </Animated.View>
+
+        <View style={styles.bottomSpace} />
       </SafeAreaView>
     </View>
   );
@@ -241,7 +319,8 @@ const styles = StyleSheet.create({
     width: "88%",
     maxWidth: 360,
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingTop: 20,
+    paddingBottom: 22,
     borderRadius: 24,
     backgroundColor: "#FFFFFF",
     shadowColor: "#164F8B",
@@ -249,9 +328,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: 7
     },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 9
   },
 
   speechText: {
@@ -260,6 +339,90 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: "600",
     textAlign: "center"
+  },
+
+  sparkle: {
+    position: "absolute",
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2
+  },
+
+  sparkleVertical: {
+    position: "absolute",
+    width: 3,
+    height: 16,
+    borderRadius: 2,
+    backgroundColor: "#8BD8FF"
+  },
+
+  sparkleHorizontal: {
+    position: "absolute",
+    width: 16,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "#8BD8FF"
+  },
+
+  sparkleTopLeft: {
+    top: -8,
+    left: 24
+  },
+
+  sparkleTopRight: {
+    top: 14,
+    right: -7
+  },
+
+  sparkleBottomLeft: {
+    bottom: 58,
+    left: -7
+  },
+
+  buttonContainer: {
+    marginTop: 18,
+    alignItems: "center"
+  },
+
+  button: {
+    minWidth: 190,
+    minHeight: 48,
+    borderRadius: 17,
+    paddingHorizontal: 22,
+    backgroundColor: colors.ocean,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.polar,
+    shadowOffset: {
+      width: 0,
+      height: 4
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 5
+  },
+
+  buttonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }]
+  },
+
+  buttonText: {
+    color: colors.snow,
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 0.2
+  },
+
+  buttonArrow: {
+    color: colors.snow,
+    fontSize: 24,
+    fontWeight: "700",
+    marginLeft: 9,
+    marginTop: -2
   },
 
   bubbleTail: {
@@ -277,49 +440,8 @@ const styles = StyleSheet.create({
     borderTopColor: "#FFFFFF"
   },
 
-  bottomArea: {
-    minHeight: 68,
-    justifyContent: "flex-end",
-    alignItems: "center"
-  },
-
-  button: {
-    minWidth: 220,
-    minHeight: 56,
-    borderRadius: 19,
-    paddingHorizontal: 24,
-    backgroundColor: colors.ocean,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: colors.polar,
-    shadowOffset: {
-      width: 0,
-      height: 5
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 9,
-    elevation: 5
-  },
-
-  buttonPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.98 }]
-  },
-
-  buttonText: {
-    color: colors.snow,
-    fontSize: 17,
-    fontWeight: "900",
-    letterSpacing: 0.2
-  },
-
-  buttonArrow: {
-    color: colors.snow,
-    fontSize: 25,
-    fontWeight: "700",
-    marginLeft: 10,
-    marginTop: -2
+  bottomSpace: {
+    minHeight: 10
   },
 
   pressed: {
