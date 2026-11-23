@@ -21,12 +21,19 @@ import { BlurView } from "expo-blur";
 
 import WelcomeScreen from "./src/screens/WelcomeScreen";
 import ZuzuIntroScreen from "./src/screens/ZuzuIntroScreen";
+import BenefitsScreen from "./src/screens/BenefitsScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import LanguageScreen, {
   Language
 } from "./src/screens/LanguageScreen";
 
-type Screen = "welcome" | "zuzu" | "login" | "language";
+type Screen =
+  | "welcome"
+  | "zuzu"
+  | "benefits"
+  | "login"
+  | "language";
+
 type OpeningStage = "splash" | "welcome" | "finished";
 
 const SPLASH_VIDEO = require(
@@ -668,8 +675,14 @@ export default function App() {
           <ScreenTransition key={screen}>
             {screen === "zuzu" && (
               <ZuzuIntroScreen
-                onContinue={() => openInternalScreen("language")}
+                onContinue={() => openInternalScreen("benefits")}
                 onBack={backToWelcome}
+              />
+            )}
+
+            {screen === "benefits" && (
+              <BenefitsScreen
+                onContinue={() => openInternalScreen("language")}
               />
             )}
 
@@ -683,7 +696,7 @@ export default function App() {
               <LanguageScreen
                 initialLanguage={selectedLanguage}
                 onContinue={handleLanguageContinue}
-                onBack={() => openInternalScreen("zuzu")}
+                onBack={() => openInternalScreen("benefits")}
               />
             )}
           </ScreenTransition>
