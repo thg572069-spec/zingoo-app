@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
 
   speechBubble: {
     position: "absolute",
-    top: "28%",
+    top: "25%",
     alignSelf: "center",
     width: "88%",
     maxWidth: 360,
