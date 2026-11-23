@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   View,
@@ -8,16 +8,9 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
-  Image
+  Image,
+  ImageBackground
 } from "react-native";
-
-import { VideoView, useVideoPlayer } from "expo-video";
-
-import { colors } from "../theme/colors";
-
-const ZUZU_HEADER_VIDEO = require(
-  "../../assets/videos/Design sem nome.mp4"
-);
 
 export type Language =
   | "Inglês"
@@ -31,34 +24,28 @@ type Props = {
   onBack: () => void;
 };
 
+const BACKGROUND_IMAGE = require(
+  "../../assets/videos/enhanced_IMG_0766.png"
+);
+
 const languages: {
   name: Language;
-  description: string;
-  reaction: string;
   image: any;
 }[] = [
   {
     name: "Inglês",
-    description: "Explore um mundo de possibilidades!",
-    reaction: "Uau! Vamos descobrir o inglês juntos!",
     image: require("../../assets/videos/IMG_0749.jpeg")
   },
   {
     name: "Espanhol",
-    description: "Descubra novas culturas e conversas!",
-    reaction: "¡Qué divertido! Vamos descobrir o espanhol juntos!",
     image: require("../../assets/videos/IMG_0748.jpeg")
   },
   {
     name: "Francês",
-    description: "Entre em uma aventura cheia de charme!",
-    reaction: "Magnifique! Nossa aventura pela língua francesa começa agora!",
     image: require("../../assets/videos/IMG_0750.jpeg")
   },
   {
     name: "Mandarim",
-    description: "Conheça uma língua fascinante!",
-    reaction: "Que incrível! Vamos explorar os sons e caracteres do mandarim!",
     image: require("../../assets/videos/IMG_0751.jpeg")
   }
 ];
@@ -72,321 +59,357 @@ export default function LanguageScreen({
     initialLanguage
   );
 
-  const headerPlayer = useVideoPlayer(
-    ZUZU_HEADER_VIDEO,
-    (player) => {
-      player.loop = true;
-      player.muted = true;
-    }
-  );
-
-  useEffect(() => {
-    headerPlayer.muted = true;
-    headerPlayer.loop = true;
-    headerPlayer.play();
-
-    return () => {
-      headerPlayer.pause();
-    };
-  }, [headerPlayer]);
-
-  const selectedInfo = languages.find(
-    (language) => language.name === selected
-  );
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backText}>‹ Voltar</Text>
-        </Pressable>
+    <ImageBackground
+      source={BACKGROUND_IMAGE}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.backgroundOverlay} />
 
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBackground}>
-            <View style={styles.progressFill} />
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Voltar e progresso */}
+
+          <View style={styles.topBar}>
+            <Pressable
+              onPress={onBack}
+              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar"
+            >
+              <Text style={styles.backArrow}>‹</Text>
+            </Pressable>
+
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTrack}>
+                <View style={styles.progressFill} />
+
+                <View style={styles.progressIndicator} />
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.progressText}>
-            SUA AVENTURA COMEÇA AQUI
-          </Text>
-        </View>
+          {/* Título */}
 
-        <View style={styles.header}>
-          <VideoView
-            player={headerPlayer}
-            style={styles.headerMascot}
-            contentFit="contain"
-            nativeControls={false}
-          />
-
-          <View style={styles.headerTextContainer}>
+          <View style={styles.heading}>
             <Text style={styles.title}>
-              Qual idioma você quer aprender?
+              <Text style={styles.titleOrange}>
+                Qual idioma
+              </Text>
+              {" você\nquer aprender?"}
             </Text>
 
             <Text style={styles.subtitle}>
-              Escolha seu primeiro idioma. Vou acompanhar você nessa jornada!
+              Escolha seu próximo destino!
             </Text>
           </View>
-        </View>
 
-        <View style={styles.grid}>
-          {languages.map((language) => {
-            const isSelected = selected === language.name;
+          {/* Cartões dos idiomas */}
 
-            return (
-              <Pressable
-                key={language.name}
-                onPress={() => setSelected(language.name)}
-                style={[
-                  styles.languageCard,
-                  isSelected && styles.selectedCard
-                ]}
-              >
-                <View style={styles.checkContainer}>
-                  {isSelected && (
-                    <View style={styles.check}>
-                      <Text style={styles.checkText}>✓</Text>
-                    </View>
-                  )}
-                </View>
+          <View style={styles.grid}>
+            {languages.map((language) => {
+              const isSelected = selected === language.name;
 
-                <Image
-                  source={language.image}
-                  style={styles.mascotImage}
-                  resizeMode="contain"
-                  accessibilityLabel={`Zuzu para ${language.name}`}
-                />
+              return (
+                <Pressable
+                  key={language.name}
+                  onPress={() => setSelected(language.name)}
+                  accessibilityRole="button"
+                  accessibilityState={{
+                    selected: isSelected
+                  }}
+                  accessibilityLabel={`Selecionar ${language.name}`}
+                  style={[
+                    styles.languageCard,
+                    isSelected && styles.selectedCard
+                  ]}
+                >
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={language.image}
+                      style={styles.languageImage}
+                      resizeMode="cover"
+                    />
 
-                <Text style={styles.languageName}>
-                  {language.name}
-                </Text>
+                    {isSelected && (
+                      <View style={styles.checkCircle}>
+                        <Text style={styles.checkText}>
+                          ✓
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
-                <Text style={styles.description}>
-                  {language.description}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.reactionBox}>
-          <Image
-            source={selectedInfo?.image ?? languages[0].image}
-            style={styles.reactionMascot}
-            resizeMode="contain"
-            accessibilityLabel="Zuzu"
-          />
-
-          <View style={styles.reactionContent}>
-            <Text style={styles.reactionTitle}>
-              {selectedInfo ? "A Zuzu adorou!" : "Uma dica da Zuzu"}
-            </Text>
-
-            <Text style={styles.reactionText}>
-              {selectedInfo
-                ? selectedInfo.reaction
-                : "Escolha um idioma para eu preparar nossa primeira aventura!"}
-            </Text>
+                  <Text style={styles.languageName}>
+                    {language.name.toUpperCase()}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        </View>
 
-        <Pressable
-          onPress={() => selected && onContinue(selected)}
-          disabled={!selected}
-          style={[
-            styles.continueButton,
-            !selected && styles.disabledButton
-          ]}
-        >
-          <Text style={styles.continueText}>
-            Continuar
-          </Text>
-        </Pressable>
+          {/* Continuar */}
 
-        <Text style={styles.footer}>
-          Você poderá adicionar outros idiomas depois.
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+          <Pressable
+            onPress={() => {
+              if (selected) {
+                onContinue(selected);
+              }
+            }}
+            disabled={!selected}
+            accessibilityRole="button"
+            accessibilityState={{
+              disabled: !selected
+            }}
+            style={[
+              styles.continueButton,
+              !selected && styles.disabledButton
+            ]}
+          >
+            <Text style={styles.continueText}>
+              Continuar
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={onBack}
+            style={styles.bottomBackButton}
+            accessibilityRole="button"
+          >
+            <Text style={styles.bottomBackText}>
+              Voltar
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  background: {
     flex: 1,
-    backgroundColor: colors.background
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#E8F7FF"
   },
+
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(238, 249, 255, 0.10)"
+  },
+
+  safeArea: {
+    flex: 1
+  },
+
   container: {
     paddingHorizontal: 22,
     paddingTop: 12,
-    paddingBottom: 28
+    paddingBottom: 22
   },
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 10
-  },
-  backText: {
-    color: colors.polar,
-    fontSize: 16,
-    fontWeight: "700"
-  },
-  progressContainer: {
-    marginTop: 12
-  },
-  progressBackground: {
-    height: 6,
-    borderRadius: 10,
-    backgroundColor: colors.ice,
-    overflow: "hidden"
-  },
-  progressFill: {
-    width: "35%",
-    height: "100%",
-    backgroundColor: colors.ocean,
-    borderRadius: 10
-  },
-  progressText: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    marginTop: 9
-  },
-  header: {
+
+  topBar: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 25,
-    marginBottom: 25,
-    gap: 12
+    gap: 17,
+    marginBottom: 32
   },
-  headerMascot: {
-    width: 88,
-    height: 100,
-    backgroundColor: "transparent"
+
+  backButton: {
+    width: 34,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center"
   },
-  headerTextContainer: {
-    flex: 1
+
+  backArrow: {
+    color: "#526B7D",
+    fontSize: 42,
+    fontWeight: "300",
+    lineHeight: 44
   },
+
+  progressContainer: {
+    flex: 1,
+    justifyContent: "center"
+  },
+
+  progressTrack: {
+    height: 17,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    overflow: "visible"
+  },
+
+  progressFill: {
+    width: "40%",
+    height: 17,
+    borderRadius: 20,
+    backgroundColor: "#238BE8"
+  },
+
+  progressIndicator: {
+    position: "absolute",
+    left: "38%",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#24B6D2",
+    borderWidth: 4,
+    borderColor: "#FFFFFF",
+    shadowColor: "#245D88",
+    shadowOffset: {
+      width: 0,
+      height: 3
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    elevation: 5
+  },
+
+  heading: {
+    width: "82%",
+    marginBottom: 26
+  },
+
   title: {
-    color: colors.polar,
-    fontSize: 23,
+    color: "#18364F",
+    fontSize: 31,
     fontWeight: "900",
-    lineHeight: 29
+    lineHeight: 40,
+    letterSpacing: -0.7
   },
+
+  titleOrange: {
+    color: "#E68A35"
+  },
+
   subtitle: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 7
+    color: "#435B70",
+    fontSize: 16,
+    fontWeight: "500",
+    marginTop: 13
   },
+
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 12
+    rowGap: 15
   },
+
   languageCard: {
-    width: "47%",
-    minHeight: 218,
-    backgroundColor: colors.snow,
+    width: "48%",
+    backgroundColor: "#FFFFFF",
     borderWidth: 2,
-    borderColor: colors.ice,
-    borderRadius: 22,
-    padding: 12,
-    alignItems: "center"
+    borderColor: "rgba(255,255,255,0.95)",
+    borderRadius: 25,
+    padding: 10,
+    alignItems: "center",
+    shadowColor: "#527C99",
+    shadowOffset: {
+      width: 0,
+      height: 5
+    },
+    shadowOpacity: 0.13,
+    shadowRadius: 10,
+    elevation: 4
   },
+
   selectedCard: {
-    borderColor: colors.ocean,
-    backgroundColor: "#F2FBFF"
+    borderColor: "#2878E5",
+    backgroundColor: "#EAF5FF",
+    borderWidth: 3,
+    padding: 9
   },
-  checkContainer: {
+
+  imageContainer: {
     width: "100%",
-    height: 23,
-    alignItems: "flex-end"
+    aspectRatio: 1,
+    borderRadius: 17,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#E8F4FA"
   },
-  check: {
-    width: 23,
-    height: 23,
-    borderRadius: 12,
-    backgroundColor: colors.ocean,
+
+  languageImage: {
+    width: "100%",
+    height: "100%"
+  },
+
+  checkCircle: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    width: 39,
+    height: 39,
+    borderRadius: 20,
+    backgroundColor: "#2878E5",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center"
   },
+
   checkText: {
-    color: colors.snow,
-    fontWeight: "900"
-  },
-  mascotImage: {
-    width: 112,
-    height: 112,
-    marginTop: 3
-  },
-  languageName: {
-    color: colors.polar,
-    fontSize: 17,
+    color: "#FFFFFF",
+    fontSize: 23,
     fontWeight: "900",
-    marginTop: 5,
-    textAlign: "center"
+    lineHeight: 27
   },
-  description: {
-    color: colors.muted,
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 6,
-    textAlign: "center"
-  },
-  reactionBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.snow,
-    borderRadius: 18,
-    padding: 13,
-    marginTop: 22,
-    borderWidth: 1,
-    borderColor: colors.ice
-  },
-  reactionMascot: {
-    width: 62,
-    height: 62,
-    marginRight: 10
-  },
-  reactionContent: {
-    flex: 1
-  },
-  reactionTitle: {
-    color: colors.polar,
-    fontSize: 13,
-    fontWeight: "900"
-  },
-  reactionText: {
-    color: colors.text,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 4
-  },
-  continueButton: {
-    backgroundColor: colors.ocean,
-    paddingVertical: 17,
-    borderRadius: 17,
-    alignItems: "center",
-    marginTop: 22
-  },
-  disabledButton: {
-    backgroundColor: "#A9C7D5"
-  },
-  continueText: {
-    color: colors.snow,
+
+  languageName: {
+    color: "#19364F",
     fontSize: 16,
-    fontWeight: "900"
-  },
-  footer: {
-    color: colors.muted,
-    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.3,
     textAlign: "center",
-    marginTop: 14
+    marginTop: 12,
+    marginBottom: 7
+  },
+
+  continueButton: {
+    backgroundColor: "#2587E8",
+    minHeight: 62,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 30,
+    shadowColor: "#1765B5",
+    shadowOffset: {
+      width: 0,
+      height: 5
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5
+  },
+
+  disabledButton: {
+    backgroundColor: "#A9C7D5",
+    shadowOpacity: 0
+  },
+
+  continueText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "800"
+  },
+
+  bottomBackButton: {
+    alignItems: "center",
+    paddingVertical: 15
+  },
+
+  bottomBackText: {
+    color: "#2879B9",
+    fontSize: 18,
+    fontWeight: "600"
   }
 });
